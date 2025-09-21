@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model StravaAccessToken {
+  athleteId Int @id @unique
+  tokenCode String
+  scope String
+  expiresAt BigInt
+}
+
+model StravaRefreshToken {
+  athleteId Int @id @unique
+  tokenCode String
+  scope String
+}
+
+model StravaActivity {
+  id Int @id @unique
+  name String
+  athleteId Int
+  distance Float
+  totalElevationGain Int
+  type String
+  sportType String
+  startDate DateTime
+  mapPolyline String
+  private Boolean
+  // TODO Add more columns as needed
+}
