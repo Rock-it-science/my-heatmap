@@ -1,5 +1,5 @@
 import StravaApiV3, { DetailedActivityResponse } from "strava-v3";
-import { PrismaClient } from "../../../prisma/generated/prisma";
+import { PrismaClient } from "../../../../prisma/generated/prisma";
 
 /**
  * Fetches detailed information about all (first 30) activities for the authenticated athlete and stores them in the database

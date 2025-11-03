@@ -1,20 +1,18 @@
-import path from "path";
-import fastify, { FastifyRequest } from "fastify";
-import fastifyStatic from "@fastify/static";
-import { exchangeAuthCodeForToken } from "./strava/auth";
-import { getAthleteActivities } from "./strava/activities";
-import { StravaAuthCodeRespone, StravaCallbackRequest } from "./strava/types";
-import { PrismaStravaTokenRepository } from "./strava/token-repository";
+// import path from "path";
+import fastify from "fastify";
+// import fastifyStatic from "@fastify/static";
+import { exchangeAuthCodeForToken } from "./services/strava/auth";
+import { getAthleteActivities } from "./services/strava/activities";
+import { StravaCallbackRequest } from "./services/strava/types";
+import { PrismaStravaTokenRepository } from "./services/strava/token-repository";
 import { PrismaClient } from "../../prisma/generated/prisma";
 
 const server = fastify();
 const root = "/app/dist";
 
-// Initialize database connection and repository
 let prismaClient: PrismaClient | null = null;
 let tokenRepository: PrismaStravaTokenRepository | null = null;
 
-// Initialize database connection
 async function initializeDatabase() {
 	try {
 		prismaClient = new PrismaClient();
@@ -27,16 +25,17 @@ async function initializeDatabase() {
 	}
 }
 
-server.register(fastifyStatic, {
-	root: path.join(root, "/frontend"),
-	prefix: "/",
-	logLevel: "debug",
-});
+// server.register(fastifyStatic, {
+// 	root: path.join(root, "/frontend"),
+// 	prefix: "/",
+// 	logLevel: "debug",
+// });
 
 /* Frontend routes */
 // Initiates auth, redirects to Strava
 server.get("/strava/auth", async (request, reply) =>
 	reply.redirect(
+		// TODO - set this to permanent domain - currently set to localhost because local IP not allowed by Strava
 		"https://www.strava.com/oauth/authorize?client_id=175179&response_type=code&redirect_uri=http://localhost/strava/auth/callback&approval_prompt=force&scope=read,activity:read",
 	),
 );
@@ -57,14 +56,6 @@ server.get(
 		// Exchange authorization code for short-lived access token and refresh token
 		try {
 			const tokenResponse = await exchangeAuthCodeForToken(code);
-
-			console.log(
-				`Token response: ${Object.getOwnPropertyNames(tokenResponse)}`,
-			);
-			console.log(
-				`Token response access token: ${tokenResponse.access_token}`,
-			);
-
 			// Store tokens in database
 			if (!tokenRepository) {
 				reply.status(500).send({ error: "Database not initialized" });
@@ -112,6 +103,10 @@ server.get("/dashboard", async (request, reply) => {
 	// TODO Make a dasbhaord with buttons and stuff, for now just show activities that we got
 	reply.redirect("/strava/activities");
 });
+
+// server.get("/heatmap-test", (request, reply) => {
+// 	reply.sendFile("assets/heatmap.html");
+// });
 
 /* Backend API Routes */
 server.post("/api/strava/auth", async () => {
