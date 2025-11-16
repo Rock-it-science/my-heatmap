@@ -2,6 +2,7 @@
 dist/
 build/
 out/
+migrations/
 
 # Dependencies
 node_modules/

@@ -32,4 +32,4 @@ ENV PORT=8085
 
 # Serve
 EXPOSE 8085
-CMD ["node", "server/dist/index.js"]
+CMD ["node", "server/dist/app.js"]

@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model StravaAccessToken {
+  athleteId Int    @id @unique
+  tokenCode String
+  scope     String
+  expiresAt BigInt
+}
+
+model StravaRefreshToken {
+  athleteId Int    @id @unique
+  tokenCode String
+  scope     String
+}
+
+model StravaActivity {
+  id                 BigInt   @id @unique
+  name               String
+  athleteId          BigInt
+  distance           Float?
+  totalElevationGain Int?
+  sportType          String
+  startDate          DateTime
+  mapPolyline        String?
+  private            Boolean?
+  // TODO Add more columns as needed
+}

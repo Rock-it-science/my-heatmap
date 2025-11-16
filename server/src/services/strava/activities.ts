@@ -1,41 +1,49 @@
 import StravaApiV3, { DetailedActivityResponse } from "strava-v3";
-import { PrismaClient } from "../../../../prisma/generated/prisma";
+import { PrismaClient } from "../../../generated/prisma";
 
 /**
- * Fetches detailed information about all (first 30) activities for the authenticated athlete and stores them in the database
+ * Fetches detailed information about all (first 30) activities for the authenticated athlete and stores them in the database. Also returns the activities.
  * @param accessToken
- * @returns
+ * @returns list of detailed activities
  */
 export async function getAthleteActivities(
+	athleteId: string,
 	accessToken: string,
 	prismaClient: PrismaClient | null,
 ) {
 	StravaApiV3.client(accessToken);
 	const activitiesRes = await StravaApiV3.athlete.listActivities({
-		perPage: 30,
+		perPage: 3, // TODO This does not seem to do anything right now
 	});
+	// TODO Add pagination
 
 	let activityDetails: DetailedActivityResponse[] = [];
 	for (const activity of activitiesRes) {
-		const activityRes = await StravaApiV3.activities.get({
-			id: activity.id,
-		});
+		const activityRes: DetailedActivityResponse =
+			await StravaApiV3.activities.get({
+				id: activity.id,
+			});
 		activityDetails.push(activityRes);
 		if (prismaClient) {
-			prismaClient.stravaActivity.create({
-				data: {
-					id: parseInt(activityRes.id),
-					name: activitiesRes.name,
-					athleteId: activitiesRes.athlete_id,
-					distance: activitiesRes.distance,
-					totalElevationGain: activitiesRes.total_elevation_gain,
-					type: activitiesRes.type,
-					sportType: activitiesRes.sport_type,
-					startDate: activitiesRes.start_date,
-					mapPolyline: activitiesRes.mapPolyline,
-					private: activitiesRes.private,
+			const record = {
+				id: parseInt(activityRes.id),
+				athleteId: parseInt(athleteId),
+				name: activityRes.name,
+				distance: activityRes.distance,
+				totalElevationGain: activityRes.total_elevation_gain,
+				sportType: activityRes.sport_type,
+				startDate: activityRes.start_date,
+				mapPolyline: activityRes.map?.polyline,
+				private: activityRes.private,
+			};
+			await prismaClient.stravaActivity.upsert({
+				create: record,
+				update: record,
+				where: {
+					id: record.id,
 				},
 			});
+			console.log("Inserted activity to database");
 		}
 	}
 

@@ -1,0 +1,13 @@
+# Cursor Rules
+
+## Documentation and Summary Files
+
+-   Do NOT create documentation files (e.g., README.md, SUMMARY.md, QUICKSTART.md, guides, or explanation documents) unless explicitly requested by the user.
+-   Only create documentation when the user specifically asks for it.
+
+## Implementation Approach
+
+-   Prefer explaining solutions and approaches in the chat response rather than immediately implementing changes.
+-   Wait for explicit confirmation or request before making code changes, unless the user's intent is clearly to have something implemented.
+-   When suggesting a solution, explain what needs to be done and why, then wait for the user to ask for implementation.
+-   Only proceed with implementation when the user explicitly asks for it (e.g., "implement this", "make this change", "do it").

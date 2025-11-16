@@ -2,7 +2,7 @@ import {
 	PrismaClient,
 	StravaAccessToken,
 	StravaRefreshToken,
-} from "../../../../prisma/generated/prisma";
+} from "../../../generated/prisma";
 
 export interface StravaTokenRepository {
 	storeTokens(

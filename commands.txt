@@ -1,0 +1,6 @@
+psql --host 192.168.1.88 --port 8087 --username postgres
+
+prisma generate
+
+docker compose up db
+npm run dev
