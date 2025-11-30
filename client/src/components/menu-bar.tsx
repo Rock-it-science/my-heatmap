@@ -1,4 +1,4 @@
-import { Button, HStack, Image, Text } from "@chakra-ui/react";
+import { Button, HStack, Image, Link, Text } from "@chakra-ui/react";
 
 function MenuBar() {
 	return (
@@ -11,10 +11,12 @@ function MenuBar() {
 			gap="50px"
 			backgroundColor="var(--dark-gray)"
 		>
-			<Image
-				src="https://cdn-icons-png.flaticon.com/512/6868/6868953.png"
-				width="50px"
-			/>
+			<Link href="/">
+				<Image
+					src="https://cdn-icons-png.flaticon.com/512/6868/6868953.png"
+					width="50px"
+				/>
+			</Link>
 			<Text textStyle="xl">My Heatmap</Text>
 			<Button
 				marginRight="10px"

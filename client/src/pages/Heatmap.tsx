@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Box, Link, Text } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import * as L from "leaflet";
 import MenuBar from "@/components/menu-bar";
-// import "leaflet.heat";
+import "leaflet.heat";
 
 function Heatmap() {
-	const [searchParams] = useSearchParams();
 	const [activityPolyLines, setActivityPolyLines] = useState<
-		[number, number][][]
+		{
+			// TODO Make this a contract that is synced with server code
+			activityId: number;
+			polylinePoints: [number, number][];
+			name: string;
+			sportType: string;
+			color: string;
+		}[]
 	>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -53,8 +58,16 @@ function Heatmap() {
 			attribution: "© OpenStreetMap contributors",
 		}).addTo(map);
 
-		L.polyline(activityPolyLines).addTo(map);
-		// TODO Make coloured based on sport
+		let allCoords: [number, number, number][] = [];
+		for (const activity of activityPolyLines) {
+			// L.polyline(activity.polylinePoints, {
+			// 	color: activity.color,
+			// }).addTo(map);
+			for (const activityPoints of activity.polylinePoints) {
+				allCoords.push([activityPoints[0], activityPoints[1], 0.35]); // Third value here is intensity
+			}
+		}
+		L.heatLayer(allCoords, { radius: 10 }).addTo(map);
 
 		mapRef.current = map;
 		console.log("Map initialized successfully");
@@ -69,15 +82,25 @@ function Heatmap() {
 	}, [activityPolyLines]);
 
 	return (
-		<Box className="heatmap-page">
-			<MenuBar />
-			<Text>Activity Heatmap</Text>
-			<Box
-				ref={mapContainerRef}
-				id="map"
-				style={{ height: "600px", width: "100%" }}
-			/>
-		</Box>
+		<html>
+			<head>
+				<link
+					rel="stylesheet"
+					href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+					integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+					crossOrigin=""
+				/>
+			</head>
+			<Box className="layout heatmap-page">
+				<MenuBar />
+				<Text>Activity Heatmap</Text>
+				<Box
+					ref={mapContainerRef}
+					id="map"
+					style={{ height: "90vh", width: "100%" }}
+				/>
+			</Box>
+		</html>
 	);
 }
 
