@@ -1,21 +1,31 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Activity } from "../types";
 
+// Helper function to get cookie value by name
+function getCookie(name: string): string | null {
+	const value = `; ${document.cookie}`;
+	const parts = value.split(`; ${name}=`);
+	if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+	return null;
+}
+
 function Dashboard() {
-	const [searchParams] = useSearchParams();
-	const athleteId = searchParams.get("athlete_id");
+	const [athleteId, setAthleteId] = useState<string | null>(null);
 	const [activities, setActivities] = useState<Activity[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (athleteId) {
-			fetchActivities(athleteId);
+		// Read athlete_id from cookie
+		const id = getCookie("athlete_id");
+		setAthleteId(id);
+		if (id) {
+			fetchActivities(id);
 		} else {
 			setLoading(false);
 		}
-	}, [athleteId]);
+	}, []);
 
 	async function fetchActivities(athleteId: string) {
 		try {

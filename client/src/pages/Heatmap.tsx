@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { Box, Link, Text } from "@chakra-ui/react";
 import * as L from "leaflet";
+import MenuBar from "@/components/menu-bar";
 // import "leaflet.heat";
 
 function Heatmap() {
 	const [searchParams] = useSearchParams();
-	const athleteId = searchParams.get("athlete_id");
 	const [activityPolyLines, setActivityPolyLines] = useState<
 		[number, number][][]
 	>([]);
@@ -15,19 +16,13 @@ function Heatmap() {
 	const mapContainerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (athleteId) {
-			fetchActivities(athleteId);
-		} else {
-			setLoading(false);
-		}
-	}, [athleteId]);
+		fetchActivities();
+	}, []);
 
-	async function fetchActivities(athleteId: string) {
+	async function fetchActivities() {
 		try {
 			setLoading(true);
-			const response = await fetch(
-				`/api/activities/polylines?athlete_id=${athleteId}`,
-			);
+			const response = await fetch("/api/activities/polylines");
 			if (response.ok) {
 				const data = await response.json();
 				setActivityPolyLines(data);
@@ -49,7 +44,7 @@ function Heatmap() {
 
 		// Initialize Leaflet map
 		const map = L.map(mapContainerRef.current).setView(
-			[50.875, -114.045],
+			[50.875, -114.045], // TODO Make this dynamic based on min/max values of user's activities
 			13,
 		);
 
@@ -59,6 +54,7 @@ function Heatmap() {
 		}).addTo(map);
 
 		L.polyline(activityPolyLines).addTo(map);
+		// TODO Make coloured based on sport
 
 		mapRef.current = map;
 		console.log("Map initialized successfully");
@@ -73,18 +69,15 @@ function Heatmap() {
 	}, [activityPolyLines]);
 
 	return (
-		<div className="heatmap-page">
-			<h1>Activity Heatmap</h1>
-			<div
+		<Box className="heatmap-page">
+			<MenuBar />
+			<Text>Activity Heatmap</Text>
+			<Box
 				ref={mapContainerRef}
 				id="map"
 				style={{ height: "600px", width: "100%" }}
 			/>
-			<nav>
-				<Link to="/dashboard">Dashboard</Link>
-				<Link to="/">Home</Link>
-			</nav>
-		</div>
+		</Box>
 	);
 }
 
