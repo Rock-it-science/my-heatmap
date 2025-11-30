@@ -1,11 +1,11 @@
 import { FastifyRequest } from "fastify";
 
 export type StravaCallbackRequest = FastifyRequest<{
-	Querystring: StravaAuthCodeRespone;
+	Querystring: StravaAuthCodeResponse;
 }>;
 
 /* Shape of responses from Strava auth endpoints */
-export interface StravaAuthCodeRespone {
+export interface StravaAuthCodeResponse {
 	state?: string;
 	code: string; // Auth code
 	scope: string;
@@ -33,4 +33,17 @@ export interface StravaTokenResponse {
 		state: string;
 		country: string;
 	};
+}
+
+export interface StravaRefreshResponse {
+	access_token: string;
+	expires_at: number;
+	expires_in: number;
+	refresh_token: string;
+}
+
+export enum STRAVA_TOKEN_STATUSES {
+	ACTIVE,
+	EXPIRED,
+	MISSING,
 }

@@ -2,8 +2,9 @@ import {
 	PrismaClient,
 	StravaAccessToken,
 	StravaRefreshToken,
-} from "../../../generated/prisma";
+} from "../../../../generated/prisma";
 
+// TODO refactor this - repository standard was probably not necassary here
 export interface StravaTokenRepository {
 	storeTokens(
 		accessToken: StravaAccessToken,
