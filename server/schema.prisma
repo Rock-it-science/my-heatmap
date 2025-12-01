@@ -24,7 +24,7 @@ model StravaRefreshToken {
 model StravaActivity {
   id BigInt @id @unique
   name String
-  athleteId BigInt
+  athleteId BigInt // TODO make this not bigint?
   distance Float?
   totalElevationGain Int?
   sportType String

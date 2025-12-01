@@ -11,21 +11,12 @@ import { InternalAuthController } from "./modules/api/auth/auth.controller";
 import { activitiesController } from "./modules/api/activities/activities.controller";
 import dbPlugin from "./plugins/db";
 
-declare module "fastify" {
-	interface Session {
-		athleteId: string;
-	}
-}
-
 const server = fastify();
 
 // Register plugins
-server.register(fastifyCookie);
-server.register(fastifySession, {
-	cookieName: "sessionId",
+server.register(fastifyCookie, {
 	secret: process.env.COOKIE_SECRET || "32-character-dev-cookie-secret-yeah",
-	cookie: { maxAge: 1800000, secure: false },
-	saveUninitialized: false,
+	hook: "onRequest",
 });
 server.register(dbPlugin);
 
@@ -67,7 +58,7 @@ server.get("/strava/auth", async (request, reply) =>
 );
 server.get("/strava/auth/callback", StravaAuthController.stravaAuthCallback);
 server.get("/strava/auth/refresh", StravaAuthController.refreshAuth);
-server.get("/strava/activities", StravaActivitiesController.getActivities);
+server.get("/strava/activities", StravaActivitiesController.syncActivities);
 
 /* App Auth */
 server.get("/auth/login", InternalAuthController.login);

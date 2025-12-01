@@ -1,5 +1,10 @@
 export interface Activity {
 	id: number;
 	name: string;
-	type: string;
+	athleteId: number;
+	distance: number;
+	totalElevationGain: number;
+	sportType: string;
+	startDate: Date;
+	private: boolean;
 }

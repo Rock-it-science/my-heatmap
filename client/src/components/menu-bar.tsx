@@ -1,6 +1,9 @@
 import { Button, HStack, Image, Link, Text } from "@chakra-ui/react";
 
 function MenuBar() {
+	const onClickLogin = () => {
+		window.location.assign("/auth/login");
+	};
 	return (
 		<HStack
 			position="absolute"
@@ -17,8 +20,14 @@ function MenuBar() {
 					width="50px"
 				/>
 			</Link>
-			<Text textStyle="xl">My Heatmap</Text>
+			<Link href="/heatmap" textStyle="xl">
+				My Heatmap
+			</Link>
+			<Link href="/dashboard" textStyle="xl">
+				Dashboard
+			</Link>
 			<Button
+				onClick={onClickLogin}
 				marginRight="10px"
 				marginLeft="auto"
 				backgroundColor="var(--light-green)"

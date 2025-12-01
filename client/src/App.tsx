@@ -12,7 +12,6 @@ function App() {
 				<Route path="/dashboard" element={<Dashboard />} />
 				<Route path="/heatmap" element={<Heatmap />} />
 				<Route path="/auth/error" element={<AuthError />} />
-				<Route path="/strava/activities" element={<Dashboard />} />
 			</Routes>
 		</BrowserRouter>
 	);

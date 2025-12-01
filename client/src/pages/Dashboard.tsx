@@ -1,38 +1,24 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Activity } from "../types";
-
-// Helper function to get cookie value by name
-function getCookie(name: string): string | null {
-	const value = `; ${document.cookie}`;
-	const parts = value.split(`; ${name}=`);
-	if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
-	return null;
-}
+import MenuBar from "@/components/menu-bar";
+import { Box, Text, Table, Button } from "@chakra-ui/react";
 
 function Dashboard() {
-	const [athleteId, setAthleteId] = useState<string | null>(null);
 	const [activities, setActivities] = useState<Activity[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		// Read athlete_id from cookie
-		const id = getCookie("athlete_id");
-		setAthleteId(id);
-		if (id) {
-			fetchActivities(id);
-		} else {
-			setLoading(false);
-		}
+		fetchActivities();
 	}, []);
 
-	async function fetchActivities(athleteId: string) {
+	/**
+	 * Fetches activities from app db
+	 */
+	async function fetchActivities() {
 		try {
 			setLoading(true);
-			const response = await fetch(
-				`/api/list_activities?athlete_id=${athleteId}`,
-			);
+			const response = await fetch(`/api/activities`);
 			if (response.ok) {
 				const data = await response.json();
 				setActivities(data);
@@ -49,39 +35,75 @@ function Dashboard() {
 		}
 	}
 
+	/**
+	 * Triggers sync from Strava to app db
+	 */
+	const onClickSyncActivities = async () => {
+		try {
+			setLoading(true);
+			const response = await fetch(`/strava/activities`);
+			if (response.ok) {
+				await fetchActivities();
+			} else {
+				setError("Failed to sync activities.");
+			}
+		} catch (err) {
+			console.error("Error syncing activities:", err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
-		<div className="dashboard-page">
-			<h1>Dashboard</h1>
-			<div id="dashboard-content">
+		<Box className="layout dashboard-page">
+			<MenuBar />
+			<Text textStyle="2xl">Dashboard</Text>
+			<Button onClick={onClickSyncActivities}>Sync activities</Button>
+			<Box id="dashboard-content">
 				{loading && <p>Loading activities...</p>}
 				{error && <p>{error}</p>}
-				{!loading && !error && athleteId && (
+				{!loading && !error && (
 					<>
-						<h2>Your Activities</h2>
-						<p>Found {activities.length} activities</p>
-						<ul>
-							{activities.slice(0, 10).map((activity) => (
-								<li key={activity.id}>
-									{activity.name || "Untitled"} -{" "}
-									{activity.type || "Activity"}
-								</li>
-							))}
-						</ul>
+						<Text textStyle="xl">Your Activities</Text>
+						<Text>Found {activities.length} activities</Text>
+						<Table.Root>
+							<Table.Header>
+								<Table.Row>
+									<Table.ColumnHeader>
+										Sport
+									</Table.ColumnHeader>
+									<Table.ColumnHeader>
+										Name
+									</Table.ColumnHeader>
+									<Table.ColumnHeader>
+										Distance
+									</Table.ColumnHeader>
+									<Table.ColumnHeader>
+										Date
+									</Table.ColumnHeader>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
+								{activities.map((activity) => (
+									<Table.Row key={activity.id}>
+										<Table.Cell>
+											{activity.sportType}
+										</Table.Cell>
+										<Table.Cell>{activity.name}</Table.Cell>
+										<Table.Cell>
+											{activity.distance}
+										</Table.Cell>
+										<Table.Cell>
+											{activity.startDate.toString()}
+										</Table.Cell>
+									</Table.Row>
+								))}
+							</Table.Body>
+						</Table.Root>
 					</>
 				)}
-				{!loading && !error && !athleteId && (
-					<p>
-						No athlete ID found. Please{" "}
-						<a href="/strava/auth">connect your Strava account</a>{" "}
-						first.
-					</p>
-				)}
-			</div>
-			<nav>
-				<Link to="/heatmap">View Heatmap</Link>
-				<Link to="/">Home</Link>
-			</nav>
-		</div>
+			</Box>
+		</Box>
 	);
 }
 

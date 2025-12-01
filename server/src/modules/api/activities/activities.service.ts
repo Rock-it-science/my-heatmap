@@ -40,10 +40,15 @@ function sportColorMap(sportType: string): string {
 
 export const activitiesService = {
 	getActivities: async (athleteId: number, prismaClient: PrismaClient) => {
-		// TODO this currently fails because bigint cannot be serialized to an API response
-		return await prismaClient?.stravaActivity.findMany({
+		const activities = await prismaClient?.stravaActivity.findMany({
+			omit: { mapPolyline: true },
 			where: { athleteId: athleteId },
 		});
+		return activities?.map(({ id, athleteId, ...activity }) => ({
+			id: Number(id),
+			athleteId: Number(athleteId),
+			...activity,
+		}));
 	},
 	/**
 	 * Get activities for an athlete and decode the encoded polyline string into lat and long coordinates. Also includes some other basic data about the activity

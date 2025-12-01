@@ -7,11 +7,11 @@ export const InternalAuthController = {
 	login: async (request: FastifyRequest, reply: FastifyReply) => {
 		// Check if request already contains an athlete ID
 		let athleteId;
-		if (request.session.athleteId) {
+		if (request.cookies.athleteId) {
 			console.log(
-				`Logging in - found session ID: ${request.session.athleteId}`,
+				`Logging in - found session ID: ${request.cookies.athleteId}`,
 			);
-			athleteId = parseInt(request.session.athleteId);
+			athleteId = parseInt(request.cookies.athleteId);
 		}
 		if (athleteId) {
 			const tokenStatus = await StravaAuthService.getTokenStatus(

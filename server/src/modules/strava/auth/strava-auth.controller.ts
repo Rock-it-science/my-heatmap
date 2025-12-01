@@ -25,7 +25,13 @@ export const StravaAuthController = {
 			console.log(
 				`Setting session athleteID to ${response.athleteId.toString()}`,
 			);
-			request.session.athleteId = response.athleteId.toString();
+			reply.setCookie("athleteId", response.athleteId.toString(), {
+				path: "/",
+				httpOnly: true,
+				sameSite: "lax",
+				secure: process.env.NODE_ENV === "production",
+				maxAge: 60 * 60 * 48, // 48 hours
+			});
 			return reply.redirect("/heatmap");
 		} catch (error) {
 			const errorMessage = `Error exchanging authorization code for Strava access token: ${error}`;
@@ -37,8 +43,8 @@ export const StravaAuthController = {
 	},
 	refreshAuth: async (request: FastifyRequest, reply: FastifyReply) => {
 		let athleteId;
-		if (request.session.athleteId) {
-			parseInt(request.session.athleteId);
+		if (request.cookies.athleteId) {
+			parseInt(request.cookies.athleteId);
 		}
 		if (!athleteId) {
 			throw Error(

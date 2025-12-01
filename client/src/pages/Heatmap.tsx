@@ -70,7 +70,6 @@ function Heatmap() {
 		L.heatLayer(allCoords, { radius: 10 }).addTo(map);
 
 		mapRef.current = map;
-		console.log("Map initialized successfully");
 
 		// Cleanup function
 		return () => {
@@ -82,25 +81,15 @@ function Heatmap() {
 	}, [activityPolyLines]);
 
 	return (
-		<html>
-			<head>
-				<link
-					rel="stylesheet"
-					href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-					integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-					crossOrigin=""
-				/>
-			</head>
-			<Box className="layout heatmap-page">
-				<MenuBar />
-				<Text>Activity Heatmap</Text>
-				<Box
-					ref={mapContainerRef}
-					id="map"
-					style={{ height: "90vh", width: "100%" }}
-				/>
-			</Box>
-		</html>
+		<Box className="layout heatmap-page">
+			<MenuBar />
+			<Text>Activity Heatmap</Text>
+			<Box
+				ref={mapContainerRef}
+				id="map"
+				style={{ height: "90vh", width: "100%" }}
+			/>
+		</Box>
 	);
 }
 
