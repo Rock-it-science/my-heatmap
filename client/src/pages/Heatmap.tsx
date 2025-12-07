@@ -6,12 +6,14 @@ import {
 	CheckboxGroup,
 	Fieldset,
 	HStack,
+	Slider,
 } from "@chakra-ui/react";
 import * as L from "leaflet";
-import MenuBar from "@/components/menu-bar";
+import MenuBar from "@/components/MenuBar";
 import "leaflet.heat";
 import { ActivityPolyline } from "@/types";
 import { FaCircle } from "react-icons/fa";
+import { renderToString } from "react-dom/server";
 
 function Heatmap() {
 	const [loading, setLoading] = useState(true);
@@ -23,6 +25,10 @@ function Heatmap() {
 	/** The map DOM element */
 	const mapRef = useRef<L.Map | null>(null);
 
+	/** Refs for control overlays to prevent map interactions */
+	const mapControlsRef = useRef<HTMLDivElement>(null);
+	const mapLegendRef = useRef<HTMLDivElement>(null);
+
 	// Layer controls
 	// TODO - if adding more layers, consider using a data structure to manage these variables
 	const heatmapLayerRef = useRef<L.HeatLayer | null>(null);
@@ -30,13 +36,16 @@ function Heatmap() {
 	const activityLinesLayerRef = useRef<L.LayerGroup | null>(null);
 	const [activityLinesLayerEnabled, setActivityLinesLayerEnabled] =
 		useState(false);
+	const [sportTypeEnabled, setSportTypeEnabled] = useState<
+		Record<string, boolean>
+	>({});
 
 	/** Activity geo data */
 	const [activityPolyLines, setActivityPolyLines] = useState<
 		ActivityPolyline[] | undefined
 	>();
 	const [activityColorMap, setActivityColorMap] = useState<
-		{ activityType: string; color: string }[]
+		{ sportType: string; sportTypeFormatted: string; color: string }[]
 	>([]);
 
 	// Fetch activity data
@@ -66,24 +75,32 @@ function Heatmap() {
 	useEffect(() => {
 		if (activityPolyLines) {
 			const tempActivityColorMap: {
-				activityType: string;
+				sportType: string;
+				sportTypeFormatted: string;
 				color: string;
 			}[] = [];
 			for (const activity of activityPolyLines) {
 				if (
 					activityColorMap &&
 					!tempActivityColorMap.some(
-						(mapping) =>
-							mapping.activityType === activity.sportType,
+						(mapping) => mapping.sportType === activity.sportType,
 					)
 				) {
 					tempActivityColorMap.push({
-						activityType: activity.sportType,
+						sportType: activity.sportType,
+						sportTypeFormatted: activity.sportType.replace(
+							/(?!^)(?=[A-Z])/g,
+							" ",
+						),
 						color: activity.color,
 					});
 				}
 			}
 			setActivityColorMap(tempActivityColorMap);
+			const sportTypeRecord: Record<string, boolean> = Object.fromEntries(
+				tempActivityColorMap.map((map) => [map.sportType, true]),
+			);
+			setSportTypeEnabled(sportTypeRecord);
 		}
 	}, [activityPolyLines]);
 
@@ -109,14 +126,29 @@ function Heatmap() {
 
 		mapRef.current = mapInstance;
 
+		// Prevent map interactions on control overlays
+		// Use requestAnimationFrame to ensure DOM elements are available
+		requestAnimationFrame(() => {
+			const controlsEl = document.getElementById("map-controls");
+			const legendEl = document.getElementById("map-legend");
+
+			if (controlsEl) {
+				L.DomEvent.disableClickPropagation(controlsEl);
+				L.DomEvent.disableScrollPropagation(controlsEl);
+			}
+			if (legendEl) {
+				L.DomEvent.disableClickPropagation(legendEl);
+				L.DomEvent.disableScrollPropagation(legendEl);
+			}
+		});
+
 		// Cleanup function
-		// TODO When should this run?
-		// return () => {
-		// 	if (mapRef.current) {
-		// 		mapRef.current.remove();
-		// 		mapRef.current = null;
-		// 	}
-		// };
+		return () => {
+			if (mapRef.current) {
+				mapRef.current.remove();
+				mapRef.current = null;
+			}
+		};
 	}, [mapContainerRef, mapRef]);
 
 	// Update layers when activityPolyLines changes
@@ -137,24 +169,47 @@ function Heatmap() {
 		}
 
 		// Create new layers
-		const newHeatmapLayer = L.heatLayer(allCoords, { radius: 10 });
-		const newActivityLinesLayer = L.layerGroup(
-			activityPolyLines.map((activityPolyline) =>
-				L.polyline(activityPolyline.polylinePoints, {
-					color: activityPolyline.color,
-				}),
-			),
+		const heatmapLayer = L.heatLayer(allCoords, {
+			radius: 12,
+		});
+		const activityLinesLayer = L.layerGroup(
+			activityPolyLines.map((activityPolyline) => {
+				const activityLineLayer = L.polyline(
+					activityPolyline.polylinePoints,
+					{
+						color: activityPolyline.color,
+					},
+				);
+				(activityLineLayer as any).sportType =
+					activityPolyline.sportType;
+				activityLineLayer.bindPopup(
+					renderToString(<p>{activityPolyline.name}</p>),
+				);
+				return activityLineLayer;
+			}),
 		);
 
 		// Update refs and state with new layers
-		heatmapLayerRef.current = newHeatmapLayer;
-		activityLinesLayerRef.current = newActivityLinesLayer;
+		heatmapLayerRef.current = heatmapLayer;
+		activityLinesLayerRef.current = activityLinesLayer;
 
 		// Add heatmap layer by default
-		newHeatmapLayer.addTo(mapRef.current);
+		heatmapLayer.addTo(mapRef.current);
 		setHeatmapLayerEnabled(true);
 		setActivityLinesLayerEnabled(false);
+
+		return () => {
+			heatmapLayer.remove();
+			activityLinesLayer.remove();
+		};
 	}, [activityPolyLines]);
+
+	const updateHeatmapPointRadius = (value: number) => {
+		heatmapLayerRef.current?.setOptions({
+			...heatmapLayerRef.current.options,
+			radius: value,
+		});
+	};
 
 	/**
 	 * Mapping of callback functions to toggle layer visibility from the map
@@ -182,6 +237,25 @@ function Heatmap() {
 				}
 			}
 		},
+		/**
+		 * Toggle all activity lines for a sport type and the legend icon
+		 */
+		activityLineSport: (sportType: string) => {
+			activityLinesLayerRef.current?.eachLayer((layer) => {
+				const polylineLayer = layer as L.Polyline & {
+					sportType?: string;
+				};
+				if (polylineLayer.sportType === sportType) {
+					polylineLayer.setStyle({
+						opacity: sportTypeEnabled[sportType] ? 0 : 1,
+					});
+				}
+			});
+			setSportTypeEnabled({
+				...sportTypeEnabled,
+				[sportType]: !sportTypeEnabled[sportType],
+			});
+		},
 	};
 
 	return (
@@ -202,6 +276,7 @@ function Heatmap() {
 				style={{ height: "calc(100vh - 60px)", width: "100%" }}
 			>
 				<Box
+					ref={mapControlsRef}
 					id="map-controls"
 					zIndex="max"
 					position="absolute"
@@ -225,6 +300,24 @@ function Heatmap() {
 								<Checkbox.Control />
 								<Checkbox.Label>Heatmap</Checkbox.Label>
 							</Checkbox.Root>
+							<Slider.Root
+								defaultValue={[12]}
+								min={1}
+								max={25}
+								size="sm"
+								onValueChange={(d) =>
+									updateHeatmapPointRadius(d.value[0])
+								}
+							>
+								<Slider.Label>Point intensity</Slider.Label>
+								<Slider.ValueText />
+								<Slider.Control>
+									<Slider.Track>
+										<Slider.Range />
+									</Slider.Track>
+									<Slider.Thumbs />
+								</Slider.Control>
+							</Slider.Root>
 							<Checkbox.Root
 								key="activity-lines-layer"
 								onCheckedChange={toggleLayer.activityLines}
@@ -238,6 +331,7 @@ function Heatmap() {
 					</Fieldset.Root>
 				</Box>
 				<Box
+					ref={mapLegendRef}
 					id="map-legend"
 					zIndex="max"
 					position="absolute"
@@ -249,11 +343,26 @@ function Heatmap() {
 					marginLeft="auto"
 					background="var(--dark-gray)"
 				>
-					<Text>Legend</Text>
+					<Text textStyle="lg" width="100%" textAlign="center">
+						Legend
+					</Text>
 					{activityColorMap.map((mapping) => (
-						<HStack>
-							<FaCircle color={mapping.color} />
-							<Text>{mapping.activityType}</Text>
+						<HStack
+							key={mapping.sportType}
+							onClick={() =>
+								toggleLayer.activityLineSport(mapping.sportType)
+							}
+						>
+							<FaCircle
+								color={
+									sportTypeEnabled[mapping.sportType]
+										? mapping.color
+										: "var(--dark-gray)"
+								}
+							/>
+							<Text textStyle="sm">
+								{mapping.sportTypeFormatted}
+							</Text>
 						</HStack>
 					))}
 				</Box>
