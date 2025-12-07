@@ -1,2 +1,3 @@
 # my-heatmap
-A sport-segmented heatmap of your Strava activities without paying for Strava premium
+
+A map-centric view for your activity data.
