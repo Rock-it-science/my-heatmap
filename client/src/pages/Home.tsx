@@ -1,5 +1,5 @@
 import { Box, Text, Button, ListRoot, ListItem } from "@chakra-ui/react";
-import MenuBar from "../components/menu-bar";
+import MenuBar from "../components/MenuBar";
 
 function Home() {
 	const onClickStravaAuth = () => {
