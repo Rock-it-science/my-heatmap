@@ -11,20 +11,113 @@ interface Activity {
 }
 
 /**
- * Generates a unique, consistent color for each sport type by hashing the string.
- * This ensures each sport type gets a distinct color without manual mapping.
+ * Manual mapping of Strava sport types to high-contrast colors.
+ * Only includes sports that typically have GPS/polyline data.
+ * Avoids green and light gray to prevent conflicts with OpenStreetMap basemap.
+ */
+const SPORT_TYPE_COLOR_MAP: Record<string, string> = {
+	// Running activities - red/orange spectrum (well-spaced)
+	Run: "#FF0000", // Pure red
+	TrailRun: "#FF4500", // Orange red
+	VirtualRun: "#FF8C00", // Dark orange
+	Walk: "#FF6347", // Tomato red
+
+	// Cycling activities - distinct blues spread across spectrum (separate from water)
+	Ride: "#0000FF", // Pure blue
+	EBikeRide: "#0080FF", // Bright blue (between pure and cyan)
+	GravelRide: "#0066FF", // Medium blue
+	MountainBikeRide: "#0033CC", // Dark blue
+	EMountainBikeRide: "#6633FF", // Blue-violet
+	VirtualRide: "#4B0082", // Indigo (purple-blue)
+
+	// Water activities - cyan/teal spectrum (distinct from cycling blues)
+	Swim: "#00CED1", // Dark turquoise
+	Kayaking: "#20B2AA", // Light sea green (teal)
+	Canoeing: "#00FFFF", // Cyan
+	Rowing: "#008B8B", // Dark cyan
+	VirtualRow: "#48D1CC", // Medium turquoise
+	StandUpPaddling: "#5F9EA0", // Cadet blue
+	Surfing: "#00BFFF", // Deep sky blue
+	Kitesurf: "#87CEEB", // Sky blue
+	Windsurf: "#4682B4", // Steel blue
+	Sail: "#008080", // Teal (darker, avoiding bright green)
+
+	// Winter sports - purple/violet spectrum (distinct from cycling)
+	AlpineSki: "#8A2BE2", // Blue violet
+	BackcountrySki: "#9370DB", // Medium purple
+	NordicSki: "#BA55D3", // Medium orchid
+	Snowboard: "#9932CC", // Dark orchid
+	Snowshoe: "#DA70D6", // Orchid
+	IceSkate: "#7B68EE", // Medium slate blue
+
+	// Hiking/outdoor - distinct red-brown
+	Hike: "#A0522D", // Sienna (red-brown)
+
+	// Wheeled activities with GPS - magenta/pink/orange spectrum
+	Skateboard: "#FF1493", // Deep pink
+	InlineSkate: "#FF69B4", // Hot pink
+	RollerSki: "#FF00FF", // Magenta
+	Handcycle: "#DC143C", // Crimson
+	Wheelchair: "#C71585", // Medium violet red
+	Velomobile: "#FF7F50", // Coral (distinct from TrailRun)
+};
+
+// Generic color for sports without GPS/polyline data (indoor, racquet sports, etc.)
+const OTHER_SPORTS_COLOR = "#8B008B"; // Dark magenta - distinct from other colors
+
+/**
+ * Gets a high-contrast color for a sport type.
+ * Uses manual mapping for GPS-enabled activities, assigns a generic color
+ * for sports without GPS data, and falls back to hash-based generation
+ * for unknown sport types.
  */
 function sportColorMap(sportType: string): string {
+	// Check manual mapping first (sports with GPS/polyline data)
+	if (SPORT_TYPE_COLOR_MAP[sportType]) {
+		return SPORT_TYPE_COLOR_MAP[sportType];
+	}
+
+	// Sports without GPS/polyline data get a generic "other" color
+	const sportsWithoutGPS = [
+		// Indoor fitness
+		"Workout",
+		"Crossfit",
+		"Elliptical",
+		"StairStepper",
+		"WeightTraining",
+		"Yoga",
+		"Pilates",
+		"HighIntensityIntervalTraining",
+		// Racquet sports
+		"Tennis",
+		"Badminton",
+		"Pickleball",
+		"Squash",
+		"Racquetball",
+		"TableTennis",
+		// Field/other sports
+		"Golf",
+		"Soccer",
+		"RockClimbing",
+	];
+
+	if (sportsWithoutGPS.includes(sportType)) {
+		return OTHER_SPORTS_COLOR;
+	}
+
+	// Fallback: hash-based color generation that avoids green and light gray
 	let hash = 0;
 	for (let i = 0; i < sportType.length; i++) {
 		hash = (hash << 5) - hash + sportType.charCodeAt(i);
 		hash = hash & hash;
 	}
 
-	// Use hash bits directly for RGB, keeping values in good range (80-255)
-	const r = ((Math.abs(hash) >> 16) % 176) + 80;
-	const g = ((Math.abs(hash) >> 8) % 176) + 80;
-	const b = (Math.abs(hash) % 176) + 80;
+	// Generate colors in ranges that avoid green and light gray
+	// Red: 200-255, Green: 50-150 (avoiding bright green), Blue: 100-255
+	// This ensures bright, high-contrast colors
+	const r = ((Math.abs(hash) >> 16) % 56) + 200; // 200-255
+	const g = ((Math.abs(hash) >> 8) % 101) + 50; // 50-150 (avoiding bright green)
+	const b = (Math.abs(hash) % 156) + 100; // 100-255
 
 	return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
