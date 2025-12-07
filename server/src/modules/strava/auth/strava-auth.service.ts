@@ -137,6 +137,7 @@ export const StravaAuthService = {
 		}
 		const token = await tokenRepository.getAccessToken(athleteId);
 		if (token) {
+			console.log(`Token found for athlete ${athleteId}`);
 			if (isTokenValid(token)) {
 				return STRAVA_TOKEN_STATUSES.ACTIVE;
 			}

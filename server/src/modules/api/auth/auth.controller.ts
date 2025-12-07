@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { AuthService } from "./auth.service";
 import { StravaAuthService } from "../../strava/auth/strava-auth.service";
 import { STRAVA_TOKEN_STATUSES } from "../../strava/auth/strava-auth.types";
+import { StravaAuthController } from "../../strava/auth/strava-auth.controller";
 
 export const InternalAuthController = {
 	login: async (request: FastifyRequest, reply: FastifyReply) => {
@@ -21,17 +22,15 @@ export const InternalAuthController = {
 			switch (tokenStatus) {
 				case STRAVA_TOKEN_STATUSES.ACTIVE:
 					console.log("Auth - Existing session found");
-					reply.redirect("/heatmap");
-					break;
+					return reply.redirect("/heatmap");
 				case STRAVA_TOKEN_STATUSES.EXPIRED:
 					console.log("Auth - token expired, refreshing");
-					reply.redirect("/strava/auth/refresh");
-					break;
+					return StravaAuthController.refreshAuth(request, reply);
 				case STRAVA_TOKEN_STATUSES.MISSING:
 					console.log(
 						`Internal auth - athlete ${athleteId} missing token`,
 					);
-					break;
+					return reply.status(400);
 			}
 		}
 		console.log("No existing session found");

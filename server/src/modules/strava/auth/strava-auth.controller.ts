@@ -44,7 +44,7 @@ export const StravaAuthController = {
 	refreshAuth: async (request: FastifyRequest, reply: FastifyReply) => {
 		let athleteId;
 		if (request.cookies.athleteId) {
-			parseInt(request.cookies.athleteId);
+			athleteId = parseInt(request.cookies.athleteId);
 		}
 		if (!athleteId) {
 			throw Error(
