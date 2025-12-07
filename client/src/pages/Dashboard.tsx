@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Activity } from "../types";
-import MenuBar from "@/components/menu-bar";
+import MenuBar from "@/components/MenuBar";
 import { Box, Text, Table, Button } from "@chakra-ui/react";
 
 function Dashboard() {
