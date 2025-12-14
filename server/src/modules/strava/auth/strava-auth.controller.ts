@@ -11,7 +11,7 @@ export const StravaAuthController = {
 			.query;
 		if (error) {
 			console.log(error);
-			reply.code(500).send({ error });
+			reply.status(500).send({ error });
 			return;
 		}
 
@@ -36,7 +36,7 @@ export const StravaAuthController = {
 		} catch (error) {
 			const errorMessage = `Error exchanging authorization code for Strava access token: ${error}`;
 			console.log(errorMessage);
-			return reply.code(500).send({
+			return reply.status(500).send({
 				error: errorMessage,
 			});
 		}
@@ -59,7 +59,7 @@ export const StravaAuthController = {
 			return reply.redirect("/auth/login");
 		} else {
 			return reply
-				.code(500)
+				.status(500)
 				.send({ message: "Failed to refresh auth token" });
 		}
 	},

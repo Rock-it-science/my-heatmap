@@ -63,6 +63,7 @@ server.get("/strava/activities", StravaActivitiesController.syncActivities);
 /* App Auth */
 server.get("/auth/login", InternalAuthController.login);
 server.post("/auth/logout", InternalAuthController.logout);
+server.get("/auth/status", InternalAuthController.status);
 
 /* Internal API */
 server.get("/api/activities", activitiesController.getActivities);

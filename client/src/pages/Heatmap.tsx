@@ -50,7 +50,7 @@ function Heatmap() {
 
 	// Fetch activity data
 	useEffect(() => {
-		const fetchActivities = async () => {
+		(async () => {
 			try {
 				setLoading(true);
 				const response = await fetch("/api/activities/polylines");
@@ -66,9 +66,7 @@ function Heatmap() {
 			} finally {
 				setLoading(false);
 			}
-		};
-
-		fetchActivities();
+		})();
 	}, []);
 
 	// Get color mapping from current activity list

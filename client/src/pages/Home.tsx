@@ -1,10 +1,20 @@
 import { Box, Text, Button, ListRoot, ListItem } from "@chakra-ui/react";
 import MenuBar from "../components/MenuBar";
+import { useEffect, useState } from "react";
+import { useLoginStatus } from "@/hooks/use-log-in-status";
 
 function Home() {
-	const onClickStravaAuth = () => {
-		window.location.assign("/auth/login");
+	const [isLoggedIn] = useLoginStatus();
+
+	const cta = {
+		text: isLoggedIn ? "Dashboard" : "Connect Account",
+		link: isLoggedIn ? "/heatmap" : "/auth/login",
 	};
+
+	const onClickCTA = () => {
+		window.location.assign(cta.link);
+	};
+
 	return (
 		<Box
 			display="flex"
@@ -33,19 +43,18 @@ function Home() {
 				</Text>
 				<ListRoot width="80%" margin="30px" display="block">
 					<ListItem>
-						Visualize your Strava activities on an interactive
-						heatmap
+						Visualize your activities on an interactive heatmap
 					</ListItem>
 				</ListRoot>
 				<Button
-					onClick={onClickStravaAuth}
+					onClick={onClickCTA}
 					marginTop="auto"
 					marginBottom="30px"
 					alignSelf="center"
 					backgroundColor="var(--light-green)"
 					width="150px"
 				>
-					Connect Strava
+					{cta.text}
 				</Button>
 			</Box>
 		</Box>

@@ -36,7 +36,7 @@ export const activitiesController = {
 				parseInt(athleteId),
 				request.server.db,
 			);
-			reply.code(200).send(response);
+			reply.status(200).send(response);
 		} catch (error) {
 			reply.status(500).send({
 				error: `Error fetching activity polylines from app db: ${error}`,

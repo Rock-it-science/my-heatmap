@@ -1,9 +1,19 @@
+import { useLoginStatus } from "@/hooks/use-log-in-status";
 import { Button, HStack, Image, Link, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 
 function MenuBar() {
-	const onClickLogin = () => {
-		window.location.assign("/auth/login");
+	const [isLoggedIn] = useLoginStatus();
+
+	const cta = {
+		text: isLoggedIn ? "Dashboard" : "Connect Account",
+		link: isLoggedIn ? "/heatmap" : "/auth/login",
 	};
+
+	const onClickCTA = () => {
+		window.location.assign(cta.link);
+	};
+
 	return (
 		<HStack
 			position="absolute"
@@ -21,18 +31,18 @@ function MenuBar() {
 				/>
 			</Link>
 			<Link href="/heatmap" textStyle="xl">
-				My Heatmap
+				<Text>My Heatmap</Text>
 			</Link>
 			<Link href="/dashboard" textStyle="xl">
-				Dashboard
+				<Text>Dashboard</Text>
 			</Link>
 			<Button
-				onClick={onClickLogin}
+				onClick={onClickCTA}
 				marginRight="10px"
 				marginLeft="auto"
 				backgroundColor="var(--light-green)"
 			>
-				Log in
+				<Text>{cta.text}</Text>
 			</Button>
 		</HStack>
 	);
