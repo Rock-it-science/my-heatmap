@@ -1,6 +1,5 @@
 import { useLoginStatus } from "@/hooks/use-log-in-status";
 import { Button, HStack, Image, Link, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
 
 function MenuBar() {
 	const [isLoggedIn] = useLoginStatus();
