@@ -4,16 +4,17 @@ import { StravaAuthService } from "../../strava/auth/strava-auth.service";
 import { STRAVA_TOKEN_STATUSES } from "../../strava/auth/strava-auth.types";
 import { StravaAuthController } from "../../strava/auth/strava-auth.controller";
 import { getAthleteID } from "../../../utils/auth-utils";
+import { STRAVA_OAUTH_URL } from "../../../types/constants";
 
 export const InternalAuthController = {
+
+	/**
+	 * Checks for existing athlete ID, if found, check if there is a valid strava token. Triggers renewal of strava token if expired.
+	 * If no athlete ID, initiate Strava auth
+	 */
 	login: async (request: FastifyRequest, reply: FastifyReply) => {
 		// Check if request already contains an athlete ID
 		const athleteId = getAthleteID(request);
-		if (!athleteId) {
-			return reply
-				.status(400)
-				.send({ error: "Error logging in, no athlete ID" });
-		}
 		const tokenStatus = await StravaAuthService.getTokenStatus(
 			athleteId,
 			request.server.db,
@@ -29,7 +30,7 @@ export const InternalAuthController = {
 				console.log(
 					`Internal auth - athlete ${athleteId} missing token`,
 				);
-				return reply.status(400);
+				return reply.redirect(STRAVA_OAUTH_URL)
 		}
 	},
 	logout: async (request: FastifyRequest, reply: FastifyReply) => {

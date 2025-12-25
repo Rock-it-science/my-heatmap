@@ -130,10 +130,13 @@ export const StravaAuthService = {
 		return tokenRepository.getAccessToken(athleteId);
 	},
 
-	getTokenStatus: async (athleteId: number, prismaClient: PrismaClient) => {
+	getTokenStatus: async (athleteId: number | null, prismaClient: PrismaClient) => {
 		const tokenRepository = new PrismaStravaTokenRepository(prismaClient);
 		if (!tokenRepository) {
 			throw Error("Could not initialize token repository");
+		}
+		if(!athleteId){
+			return STRAVA_TOKEN_STATUSES.MISSING;
 		}
 		const token = await tokenRepository.getAccessToken(athleteId);
 		if (token) {

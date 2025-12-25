@@ -10,6 +10,7 @@ import { StravaAuthController } from "./modules/strava/auth/strava-auth.controll
 import { InternalAuthController } from "./modules/api/auth/auth.controller";
 import { activitiesController } from "./modules/api/activities/activities.controller";
 import dbPlugin from "./plugins/db";
+import { STRAVA_OAUTH_URL } from "./types/constants";
 
 const server = fastify();
 
@@ -53,7 +54,7 @@ async function registerFrontendServing() {
 server.get("/strava/auth", async (request, reply) =>
 	reply.redirect(
 		// TODO - set this to permanent domain - currently set to localhost because local IP not allowed by Strava
-		"https://www.strava.com/oauth/authorize?client_id=175179&response_type=code&redirect_uri=http://localhost/strava/auth/callback&approval_prompt=force&scope=read,activity:read",
+		STRAVA_OAUTH_URL,
 	),
 );
 server.get("/strava/auth/callback", StravaAuthController.stravaAuthCallback);
