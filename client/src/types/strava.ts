@@ -1,14 +1,3 @@
-export interface Activity {
-	id: number;
-	name: string;
-	athleteId: number;
-	distance: number;
-	totalElevationGain: number;
-	sportType: string;
-	startDate: Date;
-	private: boolean;
-}
-
 export interface ActivityPolyline {
 	// TODO Make this a contract that is synced with server code
 	activityId: number;
@@ -16,4 +5,19 @@ export interface ActivityPolyline {
 	name: string;
 	sportType: string;
 	color: string;
+}
+
+/**
+ * Response type for GET `/api/activity?activityId=:actvityId`
+ * TODO - Sync this with backend using a common type file
+ */
+export interface DetailedActivityResponse {
+	id: bigint;
+	name: string;
+	athleteId: bigint;
+	distance: number | null;
+	totalElevationGain: number | null;
+	sportType: string;
+	startDate: Date;
+	private: boolean | null;
 }

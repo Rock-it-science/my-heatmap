@@ -13,7 +13,7 @@ import MenuBar from "@/components/MenuBar";
 import "leaflet.heat";
 import { ActivityPolyline } from "@/types";
 import { FaCircle } from "react-icons/fa";
-import { popupElement } from "@/components/map/popup-element";
+import { createPopupElement } from "@/components/map/popup-element";
 
 function Heatmap() {
 	const [loading, setLoading] = useState(true);
@@ -180,7 +180,9 @@ function Heatmap() {
 				);
 				(activityLineLayer as any).sportType =
 					activityPolyline.sportType;
-				activityLineLayer.bindPopup(popupElement(activityPolyline));
+				activityLineLayer.bindPopup(() =>
+					createPopupElement(activityPolyline),
+				);
 				return activityLineLayer;
 			}),
 		);
