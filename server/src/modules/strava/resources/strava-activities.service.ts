@@ -72,15 +72,9 @@ export const StravaActivitiesService = {
 					break;
 				}
 				const record = {
+					...activityRes,
 					id: parseInt(activityRes.id),
 					athleteId: athleteId,
-					name: activityRes.name,
-					distance: activityRes.distance,
-					totalElevationGain: activityRes.total_elevation_gain,
-					sportType: activityRes.sport_type,
-					startDate: activityRes.start_date,
-					mapPolyline: activityRes.map?.polyline,
-					private: activityRes.private,
 				};
 				newActivities.push(record);
 			}

@@ -23,13 +23,61 @@ model StravaRefreshToken {
 
 model StravaActivity {
   id BigInt @id @unique
-  name String
-  athleteId BigInt // TODO make this not bigint?
-  distance Float?
-  totalElevationGain Int?
-  sportType String
-  startDate DateTime
-  mapPolyline String?
-  private Boolean?
-  // TODO Add more columns as needed
+  athlete_id Int
+  
+  // Nested objects
+  athlete               Json
+  map                   Json?
+
+  // Basic info
+  name                  String
+  sport_type            String
+  description           String?
+  private_notes         String?
+
+  // Distances & time
+  distance              Float?
+  moving_time           Int?
+  elapsed_time          Int?
+  total_elevation_gain  Float?
+  elev_high             Float?
+  elev_low              Float?
+
+  // Dates
+  start_date            DateTime
+  start_date_local      DateTime
+  timezone              String?
+  utc_offset            Int?
+
+  // Location
+  location_city         String?
+  location_state        String?
+  location_country      String?
+  start_latlng          Float[]
+  end_latlng            Float[]
+
+  // Counts
+  achievement_count     Int?
+  kudos_count           Int?
+  comment_count         Int?
+  athlete_count         Int?
+  photo_count           Int?
+  total_photo_count     Int?
+
+  // Flags
+  trainer               Boolean?
+  commute               Boolean?
+  manual                Boolean?
+  private               Boolean?
+  flagged               Boolean?
+  has_kudoed            Boolean?
+  hide_from_home        Boolean?
+
+  // Performance
+  average_speed         Float?
+  max_speed             Float?
+  calories              Float?
+
+  // Gear
+  gear_id               String?
 }
