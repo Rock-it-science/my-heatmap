@@ -7,7 +7,6 @@ import { getAthleteID } from "../../../utils/auth-utils";
 import { STRAVA_OAUTH_URL } from "../../../types/constants";
 
 export const InternalAuthController = {
-
 	/**
 	 * Checks for existing athlete ID, if found, check if there is a valid strava token. Triggers renewal of strava token if expired.
 	 * If no athlete ID, initiate Strava auth
@@ -30,7 +29,7 @@ export const InternalAuthController = {
 				console.log(
 					`Internal auth - athlete ${athleteId} missing token`,
 				);
-				return reply.redirect(STRAVA_OAUTH_URL)
+				return reply.redirect(STRAVA_OAUTH_URL);
 		}
 	},
 	logout: async (request: FastifyRequest, reply: FastifyReply) => {
@@ -63,6 +62,7 @@ export const InternalAuthController = {
 			athleteId,
 			request.server.db,
 		);
+		console.log(`Token status: ${tokenStatus}`);
 		switch (tokenStatus) {
 			case STRAVA_TOKEN_STATUSES.ACTIVE:
 				return reply.send({ loggedIn: true });
