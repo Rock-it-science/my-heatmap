@@ -1,5 +1,5 @@
 import { PrismaClient } from "../../../../generated/prisma";
-import { PrismaStravaTokenRepository } from "../../../modules/strava/auth/strava-auth.stores";
+import { PrismaStravaTokenRepository } from "./strava-auth.stores";
 
 describe("TokenRepository", () => {
 	let prismaClient: PrismaClient;
