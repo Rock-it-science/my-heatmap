@@ -72,6 +72,7 @@ server.get(
 	"/api/activities/polylines",
 	activitiesController.getActivitiesPolylines,
 );
+server.get("/api/activity", activitiesController.getActivity);
 
 // Catch-all route for SPA: serve index.html for all non-API routes
 // This must be registered LAST so API routes take precedence

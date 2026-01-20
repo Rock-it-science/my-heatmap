@@ -179,4 +179,18 @@ export const activitiesService = {
 		}
 		return;
 	},
+	getActivity: async (activityId: number, prismaClient: PrismaClient) => {
+		const activity = await prismaClient?.stravaActivity.findFirst({
+			omit: { mapPolyline: true },
+			where: { id: activityId },
+		});
+		if (!activity) {
+			return {};
+		}
+		return {
+			...activity,
+			id: Number(activity.id),
+			athleteId: Number(activity.athleteId),
+		};
+	},
 };
