@@ -12,7 +12,7 @@ import { ActivityPolyline, DetailedActivityResponse } from "@/types";
 import { JSX, useEffect, useState } from "react";
 
 /** Popup component that gets asynchronously populated with activity details */
-function PopupElement({ activityId }: { activityId: string }): JSX.Element {
+function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [activityDetails, setActivityDetails] =
@@ -72,9 +72,9 @@ function PopupElement({ activityId }: { activityId: string }): JSX.Element {
 }
 
 /** Returns the popup component as an HTML Element */
-export function createPopupElement(activity: ActivityPolyline): HTMLElement {
+export function createActivityPopup(activity: ActivityPolyline): HTMLElement {
 	const popupContainer = document.createElement("div");
 	const root = createRoot(popupContainer);
-	root.render(<PopupElement activityId={activity.activityId.toString()} />);
+	root.render(<ActivityPopup activityId={activity.activityId.toString()} />);
 	return popupContainer;
 }

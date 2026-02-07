@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Activity } from "../types";
+import { DetailedActivityResponse } from "../types";
 import MenuBar from "@/components/MenuBar";
 import { Box, Text, Table, Button } from "@chakra-ui/react";
 
-function Dashboard() {
-	const [activities, setActivities] = useState<Activity[]>([]);
+function DashboardPage() {
+	const [activities, setActivities] = useState<DetailedActivityResponse[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -107,4 +107,4 @@ function Dashboard() {
 	);
 }
 
-export default Dashboard;
+export default DashboardPage;
