@@ -1,4 +1,3 @@
-import path from "path";
 import { fastify } from "fastify";
 import { fastifySecureSession } from "@fastify/secure-session";
 import cors from "@fastify/cors";
@@ -16,13 +15,12 @@ dotenv.config();
 const server = fastify().withTypeProvider<TypeBoxTypeProvider>();
 
 server.register(fastifySecureSession, {
-	key: fs.readFileSync(path.join(__dirname, "secret-key")),
-	secret: process.env.SESSION_SECRET,
-	salt: process.env.SESSION_SALT,
+	key: Buffer.from(process.env.SESSION_SECRET as string, "hex"),
 	cookie: {
 		path: "/",
 		httpOnly: true,
 		secure: true,
+		sameSite: "lax",
 	},
 });
 server.register(cors, {
