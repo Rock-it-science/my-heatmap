@@ -1,10 +1,10 @@
 import path from "path";
 import { fastify } from "fastify";
 import { fastifySecureSession } from "@fastify/secure-session";
+import cors from "@fastify/cors";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { StravaActivitiesController } from "./modules/strava/resources/strava-activities.controller";
 import { StravaAuthController } from "./modules/strava/auth/strava-auth.controller";
-import { STRAVA_OAUTH_URL } from "./types/constants";
 import * as fs from "node:fs";
 import dotenv from "dotenv";
 import {
@@ -25,6 +25,12 @@ server.register(fastifySecureSession, {
 		secure: true,
 	},
 });
+server.register(cors, {
+	origin: process.env.FRONTEND_URL,
+	methods: ["GET"],
+	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true,
+});
 
 /* Routes */
 server.get("/api/auth", StravaAuthController.stravaAuthRedirect);
@@ -44,8 +50,6 @@ server.get("/api/activities", {
 
 async function startServer() {
 	try {
-		// await registerFrontendServing();
-
 		const address = await server.listen({ port: 8085, host: "0.0.0.0" });
 		console.log(`Server listening at ${address}`);
 	} catch (err) {
