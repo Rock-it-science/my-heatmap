@@ -43,27 +43,34 @@ export const StravaAuthController = {
 			});
 		}
 	},
-	// refreshAuth: async (request: FastifyRequest, reply: FastifyReply) => {
-	// 	let athleteId;
-	// 	if (request.cookies.athleteId) {
-	// 		athleteId = parseInt(request.cookies.athleteId);
-	// 	}
-	// 	if (!athleteId) {
-	// 		throw Error(
-	// 			"Cannot refresh token because no athlete ID found in session",
-	// 		);
-	// 	}
-	// 	const success = await StravaAuthService.refreshAuth(
-	// 		athleteId,
-	// 	);
-	// 	if (success) {
-	// 		return reply.redirect("/auth/login");
-	// 	} else {
-	// 		return reply
-	// 			.status(500)
-	// 			.send({ message: "Failed to refresh auth token" });
-	// 	}
-	// },
+	refreshAuth: async (request: FastifyRequest, reply: FastifyReply) => {
+		const stravaAuth = request.session.get("stravaAuth");
+		if (!stravaAuth) {
+			return reply.status(500).send({ error: "Mising auth data" });
+		}
+		try {
+			const newToken = await StravaAuthService.refreshAuth(stravaAuth);
+			const athleteId = stravaAuth.athlete.id;
+			request.session.set("stravaAuth", {
+				accessToken: {
+					code: newToken.accessToken,
+					expiresAt: new Date(newToken.expiresAt * 1000),
+				},
+				refreshToken: {
+					code: newToken.refreshToken,
+				},
+				athlete: {
+					id: athleteId,
+				},
+			});
+			return reply.redirect("/auth/login");
+		} catch (error) {
+			console.log(`Error refreshing auth token: ${error}`);
+			return reply
+				.status(500)
+				.send({ error: "Failed to refresh auth token" });
+		}
+	},
 	status: async (request: FastifyRequest, reply: FastifyReply) => {
 		const stravaAuth = request.session.get("stravaAuth");
 		if (

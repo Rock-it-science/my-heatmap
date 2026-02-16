@@ -1,3 +1,4 @@
+import { StravaAuth } from "../../../types/strava.types";
 import {
 	StravaRefreshResponse,
 	StravaTokenResponse,
@@ -11,7 +12,6 @@ import strava from "strava-v3";
 async function exchangeAuthCodeForToken(
 	authCode: string,
 ): Promise<StravaTokenResponse> {
-	console.log("debug - sending code to strava");
 	if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
 		throw Error("Client ID or secret not set");
 	}
@@ -33,41 +33,25 @@ async function exchangeAuthCodeForToken(
 /**
  * Use refresh token to fetch new access token
  */
-// async function refreshExpiredAccessToken(
-// 	refreshToken: string,
-// ): Promise<StravaRefreshResponse> {
-// 	if (!process.env.STRAVA_CLIENT_SECRET) {
-// 		throw Error("Strava client secret not set");
-// 	}
-
-// 	const formData = new URLSearchParams();
-// 	formData.append("client_id", process.env.STRAVA_CLIENT_ID || "175179");
-// 	formData.append("client_secret", process.env.STRAVA_CLIENT_SECRET);
-// 	formData.append("grant_type", "refresh_token");
-// 	formData.append("refresh_token", refreshToken);
-
-// 	const request: RequestInfo = new Request(
-// 		"https://www.strava.com/oauth/token",
-// 		{
-// 			method: "POST",
-// 			headers: {
-// 				"Content-Type": "application/x-www-form-urlencoded",
-// 			},
-// 			body: formData,
-// 		},
-// 	);
-
-// 	const response = await fetch(request);
-
-// 	if (!response.ok) {
-// 		const errorText = await response.text();
-// 		throw new Error(
-// 			`Strava API error: ${response.status} ${response.statusText} - ${errorText}`,
-// 		);
-// 	}
-
-// 	return response.json(); // TODO proper type casting to StravaRefreshResponse
-// }
+async function refreshExpiredAccessToken(
+	refreshToken: string,
+): Promise<StravaRefreshResponse> {
+	if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
+		throw Error("Client ID or secret not set");
+	}
+	try {
+		strava.config({
+			access_token: "not set yet",
+			client_id: process.env.STRAVA_CLIENT_ID,
+			client_secret: process.env.STRAVA_CLIENT_SECRET,
+			redirect_uri: "localhost",
+		});
+	} catch (error) {
+		throw Error(`Error setting Strava config: ${error.message}`);
+	}
+	const response = await strava.oauth.refreshToken(refreshToken);
+	return response;
+}
 
 /**
  * Returns true if given token has not yet expired.
@@ -106,31 +90,22 @@ export const StravaAuthService = {
 		return STRAVA_TOKEN_STATUSES.MISSING;
 	},
 
-	// refreshAuth: async (athleteId: number, prismaClient: PrismaClient) => {
-	// 	const refreshToken = await tokenRepository.getRefreshToken(athleteId);
-
-	// 	if (!refreshToken) {
-	// 		throw Error("Refresh Auth - Failed to find existing refresh token");
-	// 	}
-	// 	const tokenResponse = await refreshExpiredAccessToken(
-	// 		refreshToken.tokenCode,
-	// 	);
-	// 	const success = tokenRepository.storeTokens(
-	// 		{
-	// 			athleteId: athleteId,
-	// 			scope: refreshToken.scope ?? "read",
-	// 			tokenCode: tokenResponse.access_token,
-	// 			expiresAt: BigInt(tokenResponse.expires_at),
-	// 		},
-	// 		{
-	// 			athleteId: athleteId,
-	// 			tokenCode: tokenResponse.refresh_token,
-	// 			scope: refreshToken.scope || "read",
-	// 		},
-	// 	);
-	// 	if (!success) {
-	// 		throw Error("Failure storing tokens in database");
-	// 	}
-	// 	return true;
-	// },
+	refreshAuth: async (
+		stravaAuth: StravaAuth,
+	): Promise<{
+		accessToken: string;
+		expiresAt: number;
+		refreshToken: string;
+	}> => {
+		const refreshToken = stravaAuth.refreshToken.code;
+		if (!refreshToken) {
+			throw Error("Refresh Auth - Failed to find existing refresh token");
+		}
+		const tokenResponse = await refreshExpiredAccessToken(refreshToken);
+		return {
+			accessToken: tokenResponse.access_token,
+			expiresAt: tokenResponse.expires_at,
+			refreshToken: tokenResponse.refresh_token,
+		};
+	},
 };

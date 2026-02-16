@@ -62,8 +62,7 @@ server.get("/api/user/auth", async (_request, reply) =>
 	),
 );
 server.get("/api/user/auth/callback", StravaAuthController.stravaAuthCallback);
-// TODO Refresh
-// server.get("/api/user/auth/refresh", StravaAuthController.refreshAuth);
+server.get("/api/user/auth/refresh", StravaAuthController.refreshAuth);
 server.get("/api/user/auth/status", StravaAuthController.status);
 server.get("/api/activities", StravaActivitiesController.getActivities);
 
