@@ -28,6 +28,12 @@ export default defineConfig({
 		hmr: {
 			overlay: true,
 		},
+		proxy: {
+			"/api": {
+				target: "http://localhost:8085",
+				changeOrigin: true,
+			},
+		},
 	},
 	build: {
 		outDir: "dist",

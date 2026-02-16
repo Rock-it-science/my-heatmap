@@ -7,6 +7,7 @@ import {
 	Fieldset,
 	HStack,
 	Slider,
+	Loader,
 } from "@chakra-ui/react";
 import * as L from "leaflet";
 import "leaflet.heat";
@@ -218,6 +219,7 @@ export function MapApp() {
 
 	return (
 		<Box id="map">
+			{loading && <Loader />}
 			<Text
 				id="error-text"
 				hidden={!error}

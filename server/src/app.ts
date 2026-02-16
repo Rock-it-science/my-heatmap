@@ -25,35 +25,6 @@ server.register(fastifySecureSession, {
 	},
 });
 
-// Register proxy to Vite dev server in development
-async function registerFrontendServing() {
-	const isDevelopment = process.env.NODE_ENV !== "production";
-	const rootDir = path.resolve(process.cwd());
-	const clientDistPath = path.join(rootDir, "../client/dist"); // TODO this is different in docker and dev rn
-
-	if (isDevelopment) {
-		const VITE_DEV_SERVER_URL = "http://localhost:5173";
-
-		// In development, register a catch-all route that proxies to Vite
-		// This must be registered AFTER all API routes so they take precedence
-		// Fastify matches routes in registration order, so API routes will be matched first
-		await server.register(fastifyHttpProxy, {
-			upstream: VITE_DEV_SERVER_URL,
-			prefix: "/",
-			rewritePrefix: "/",
-		});
-		console.log(
-			`Proxying frontend requests to Vite dev server at ${VITE_DEV_SERVER_URL}`,
-		);
-	} else {
-		// In production, serve static files
-		await server.register(fastifyStatic, {
-			root: clientDistPath,
-		});
-		console.log(`Serving static files from: ${clientDistPath}`);
-	}
-}
-
 /* Strava Routes */
 server.get("/api/user/auth", async (_request, reply) =>
 	reply.redirect(
