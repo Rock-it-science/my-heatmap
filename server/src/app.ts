@@ -4,7 +4,6 @@ import cors from "@fastify/cors";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { StravaActivitiesController } from "./modules/strava/resources/strava-activities.controller";
 import { StravaAuthController } from "./modules/strava/auth/strava-auth.controller";
-import * as fs from "node:fs";
 import dotenv from "dotenv";
 import {
 	GetActivitiesParams,

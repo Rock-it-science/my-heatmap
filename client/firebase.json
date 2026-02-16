@@ -5,7 +5,7 @@
 			{
 				"source": "/api/**",
 				"run": {
-					"serviceId": "https://my-heatmap-404269582941.us-central1.run.app/",
+					"serviceId": "my-heatmap",
 					"region": "us-central1"
 				}
 			}
