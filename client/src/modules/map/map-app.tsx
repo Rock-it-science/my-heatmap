@@ -137,8 +137,11 @@ export function MapApp() {
 				);
 				(activityLineLayer as any).sportType =
 					activityPolyline.sportType;
-				activityLineLayer.bindPopup(() =>
-					createActivityPopup(activityPolyline),
+				activityLineLayer.bindPopup(
+					() => createActivityPopup(activityPolyline),
+					{
+						minWidth: 200,
+					},
 				);
 				return activityLineLayer;
 			}),
