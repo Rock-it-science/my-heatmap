@@ -40,7 +40,7 @@ flowchart TD
 
 ### Fetching Strava Activities
 
-The app interfaces with the Strava API to fetch activity data, especially Polyline map data. Map data is not included with the basic acticity response returned from `listActivities` so every activity needs an explicit `GET` request.
+The app interfaces with the Strava API to fetch activity data, especially Polyline map data. This is all included in the `GET /athlete/activities` endpoint.
 
 Requests are handled on the backend to keep the user's Strava access token a secret. This also allows us to use the Strava node npm library to abstract away HTTP requests.
 
@@ -55,8 +55,7 @@ flowchart TD
     auth token and runs API
     request to Strava to
     fetch Activity data.] -->
-    D[Runs list activities,
-    then GET on each activity] -->
+    D[Runs list activities] -->
     E[Returns list of relavent
     activity data to frontend]
 ```
