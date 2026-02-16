@@ -29,9 +29,11 @@ function storeActivities(filteredActivities: StravaActivity[]) {
 	}
 }
 
-async function fetchStravaActivitiesFromAPI(): Promise<StravaActivityRaw[]> {
+export async function fetchStravaActivitiesFromAPI(): Promise<
+	StravaActivityRaw[]
+> {
 	console.log("Fetching activities from API");
-	let rawActivities: StravaActivityRaw[] | undefined;
+	let rawActivities: StravaActivityRaw[] = [];
 	let error;
 	let page = 1;
 	while (!error) {
@@ -61,7 +63,7 @@ async function fetchStravaActivitiesFromAPI(): Promise<StravaActivityRaw[]> {
 		throw Error(error ?? "No activities found");
 	}
 	if (error) {
-		console.warn(`Partial ${error}`);
+		console.warn(`Received error after data: ${error}`);
 	}
 	return rawActivities;
 }

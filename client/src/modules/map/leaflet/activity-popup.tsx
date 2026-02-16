@@ -13,7 +13,7 @@ import { StravaActivity } from "shared/index";
 import {
 	fetchStravaActivities,
 	getLocalActivitiesIfAvailable,
-} from "@/modules/api/strava";
+} from "@/modules/api/strava-api";
 
 /** Popup component that gets asynchronously populated with activity details */
 function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {

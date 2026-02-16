@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import MenuBar from "@/components/MenuBar";
 import { Box, Text, Table, Button } from "@chakra-ui/react";
 import { StravaActivity } from "shared/index";
-import { fetchStravaActivities } from "@/modules/api/strava";
+import { fetchStravaActivities } from "@/modules/api/strava-api";
 
 export function DashboardPage() {
 	const [activities, setActivities] = useState<StravaActivity[]>([]);
