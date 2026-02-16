@@ -34,7 +34,7 @@ export const StravaAuthController = {
 					id: response.athlete.id,
 				},
 			});
-			return reply.redirect("/heatmap");
+			return reply.redirect(`${process.env.FRONTEND_URL}/heatmap`);
 		} catch (error) {
 			const errorMessage = `Error exchanging authorization code for Strava access token: ${error}`;
 			console.log(errorMessage);

@@ -25,15 +25,15 @@ server.register(fastifySecureSession, {
 	},
 });
 
-// Get the directory paths - resolve from project root
-const rootDir = path.resolve(process.cwd());
-const clientDistPath = path.join(rootDir, "../client/dist"); // TODO this is different in docker and dev rn
-const isDevelopment = process.env.NODE_ENV !== "production";
-const VITE_DEV_SERVER_URL = "http://localhost:5173";
-
-// Register proxy to Vite dev server in development, or static files in production
+// Register proxy to Vite dev server in development
 async function registerFrontendServing() {
+	const isDevelopment = process.env.NODE_ENV !== "production";
+	const rootDir = path.resolve(process.cwd());
+	const clientDistPath = path.join(rootDir, "../client/dist"); // TODO this is different in docker and dev rn
+
 	if (isDevelopment) {
+		const VITE_DEV_SERVER_URL = "http://localhost:5173";
+
 		// In development, register a catch-all route that proxies to Vite
 		// This must be registered AFTER all API routes so they take precedence
 		// Fastify matches routes in registration order, so API routes will be matched first
@@ -66,42 +66,10 @@ server.get("/api/user/auth/refresh", StravaAuthController.refreshAuth);
 server.get("/api/user/auth/status", StravaAuthController.status);
 server.get("/api/activities", StravaActivitiesController.getActivities);
 
-// Catch-all route for SPA: serve index.html for all non-API routes
-// This must be registered LAST so API routes take precedence
-// Only needed in production (dev mode uses proxy)
-if (!isDevelopment) {
-	server.setNotFoundHandler(async (request, reply) => {
-		// Don't serve index.html for API routes
-		if (
-			request.url.startsWith("/api") ||
-			request.url.startsWith("/strava")
-		) {
-			reply.status(404).send({ error: "Not found" });
-			return;
-		}
-
-		// Serve index.html for all other routes (SPA fallback)
-		try {
-			const indexPath = path.join(clientDistPath, "index.html");
-			const indexContent = readFileSync(indexPath, "utf-8");
-			reply.type("text/html").send(indexContent);
-		} catch (error) {
-			console.log(error.message);
-			reply.status(404).send({
-				error: "Frontend not found. Please build the client first.",
-			});
-		}
-	});
-}
-
-// Start the server
 async function startServer() {
 	try {
-		// Register frontend serving (proxy in dev, static files in production)
-		// This must be done after all API routes are registered
-		await registerFrontendServing();
+		// await registerFrontendServing();
 
-		// Start the server
 		const address = await server.listen({ port: 8085, host: "0.0.0.0" });
 		console.log(`Server listening at ${address}`);
 	} catch (err) {
@@ -110,7 +78,6 @@ async function startServer() {
 	}
 }
 
-// Graceful shutdown handling
 async function gracefulShutdown(signal: string) {
 	console.log(`Received ${signal}. Gracefully shutting down...`);
 
@@ -127,5 +94,4 @@ async function gracefulShutdown(signal: string) {
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
-// Start the server
 startServer();
