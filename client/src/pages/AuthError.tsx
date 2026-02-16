@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-function AuthErrorPage() {
+export function AuthErrorPage() {
 	return (
 		<div className="auth-error-page">
 			<h1>Authentication Error</h1>
@@ -13,4 +13,3 @@ function AuthErrorPage() {
 	);
 }
 
-export default AuthErrorPage;

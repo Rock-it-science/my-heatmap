@@ -1,8 +1,7 @@
 /**
- * Response type for GET `/api/activities`
- * TODO - Sync this with backend using a common type file
+ * Processed Strava activity interface that is returned to frontend
  */
-export interface StravaActivityResponse {
+export interface StravaActivity {
 	id: string;
 	athleteId: number;
 	name: string;
@@ -16,8 +15,4 @@ export interface StravaActivityResponse {
 	mapPolyline?: string;
 	gearId?: string;
 	description?: string;
-}
-
-export interface StravaActivity extends StravaActivityResponse {
-	polylinePoints: [number, number][];
 }

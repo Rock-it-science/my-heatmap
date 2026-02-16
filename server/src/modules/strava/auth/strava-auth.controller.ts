@@ -15,22 +15,24 @@ export const StravaAuthController = {
 			return;
 		}
 
-		let response;
 		try {
-			response = await StravaAuthService.stravaAuthCallback(
+			const response = await StravaAuthService.stravaAuthCallback(
 				code,
 				scope,
-				request.server.db,
 			);
-			console.log(
-				`Setting session athleteID to ${response.athleteId.toString()}`,
-			);
-			reply.setCookie("athleteId", response.athleteId.toString(), {
-				path: "/",
-				httpOnly: true,
-				sameSite: "lax",
-				secure: process.env.NODE_ENV === "production",
-				maxAge: 60 * 60 * 48, // 48 hours
+
+			const expiresAtDate = new Date(response.expires_at);
+			request.session.set("stravaAuth", {
+				accessToken: {
+					code: response.access_token,
+					expiresAt: expiresAtDate,
+				},
+				refreshToken: {
+					code: response.refresh_token,
+				},
+				athlete: {
+					id: response.athlete.id,
+				},
 			});
 			return reply.redirect("/heatmap");
 		} catch (error) {
@@ -41,26 +43,37 @@ export const StravaAuthController = {
 			});
 		}
 	},
-	refreshAuth: async (request: FastifyRequest, reply: FastifyReply) => {
-		let athleteId;
-		if (request.cookies.athleteId) {
-			athleteId = parseInt(request.cookies.athleteId);
-		}
-		if (!athleteId) {
-			throw Error(
-				"Cannot refresh token because no athlete ID found in session",
-			);
-		}
-		const success = await StravaAuthService.refreshAuth(
-			athleteId,
-			request.server.db,
-		);
-		if (success) {
-			return reply.redirect("/auth/login");
+	// refreshAuth: async (request: FastifyRequest, reply: FastifyReply) => {
+	// 	let athleteId;
+	// 	if (request.cookies.athleteId) {
+	// 		athleteId = parseInt(request.cookies.athleteId);
+	// 	}
+	// 	if (!athleteId) {
+	// 		throw Error(
+	// 			"Cannot refresh token because no athlete ID found in session",
+	// 		);
+	// 	}
+	// 	const success = await StravaAuthService.refreshAuth(
+	// 		athleteId,
+	// 	);
+	// 	if (success) {
+	// 		return reply.redirect("/auth/login");
+	// 	} else {
+	// 		return reply
+	// 			.status(500)
+	// 			.send({ message: "Failed to refresh auth token" });
+	// 	}
+	// },
+	status: async (request: FastifyRequest, reply: FastifyReply) => {
+		const stravaAuth = request.session.get("stravaAuth");
+		if (
+			stravaAuth &&
+			stravaAuth.accessToken &&
+			stravaAuth.accessToken.expiresAt > new Date()
+		) {
+			return true;
 		} else {
-			return reply
-				.status(500)
-				.send({ message: "Failed to refresh auth token" });
+			return false;
 		}
 	},
 };

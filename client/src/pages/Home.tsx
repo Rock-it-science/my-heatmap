@@ -1,14 +1,13 @@
 import { Box, Text, Button, ListRoot, ListItem } from "@chakra-ui/react";
 import MenuBar from "../components/MenuBar";
-import { useEffect, useState } from "react";
 import { useLoginStatus } from "@/hooks/use-log-in-status";
 
-function Home() {
+export function HomePage() {
 	const [isLoggedIn] = useLoginStatus();
 
 	const cta = {
 		text: isLoggedIn ? "Dashboard" : "Connect Account",
-		link: isLoggedIn ? "/heatmap" : "/auth/login",
+		link: isLoggedIn ? "/heatmap" : "/api/user/auth",
 	};
 
 	const onClickCTA = () => {
@@ -60,5 +59,3 @@ function Home() {
 		</Box>
 	);
 }
-
-export default Home;

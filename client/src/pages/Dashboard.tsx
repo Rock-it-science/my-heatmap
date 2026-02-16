@@ -3,7 +3,7 @@ import { DetailedActivityResponse } from "../types";
 import MenuBar from "@/components/MenuBar";
 import { Box, Text, Table, Button } from "@chakra-ui/react";
 
-function DashboardPage() {
+export function DashboardPage() {
 	const [activities, setActivities] = useState<DetailedActivityResponse[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -106,5 +106,3 @@ function DashboardPage() {
 		</Box>
 	);
 }
-
-export default DashboardPage;

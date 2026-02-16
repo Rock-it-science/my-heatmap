@@ -23,7 +23,6 @@ WORKDIR /app
 COPY --from=server-builder /app/server/dist ./server/dist
 COPY --from=server-builder /app/server/package.json ./server/package.json
 COPY --from=client-builder /app/client/dist ./client/dist
-COPY prisma ./prisma
 RUN npm install --prefix ./server --omit=dev
 
 # Environment

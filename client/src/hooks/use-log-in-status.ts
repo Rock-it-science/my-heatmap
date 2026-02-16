@@ -9,7 +9,7 @@ export const useLoginStatus = () => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const response = await fetch("/auth/status");
+				const response = await fetch("/api/auth/status");
 				if (response.ok) {
 					const payload: { loggedIn: boolean } =
 						await response.json();

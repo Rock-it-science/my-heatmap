@@ -3,23 +3,27 @@ import { readFileSync } from "fs";
 import { fastify } from "fastify";
 import { fastifyStatic } from "@fastify/static";
 import { fastifyHttpProxy } from "@fastify/http-proxy";
-import { fastifyCookie } from "@fastify/cookie";
-import { fastifySession } from "@fastify/session";
+import { fastifySecureSession } from "@fastify/secure-session";
 import { StravaActivitiesController } from "./modules/strava/resources/strava-activities.controller";
 import { StravaAuthController } from "./modules/strava/auth/strava-auth.controller";
-import { InternalAuthController } from "./modules/api/auth/auth.controller";
-import { activitiesController } from "./modules/api/activities/activities.controller";
-import dbPlugin from "./plugins/db";
 import { STRAVA_OAUTH_URL } from "./types/constants";
+import * as fs from "node:fs";
+import dotenv from "dotenv";
 
+dotenv.config();
 const server = fastify();
 
 // Register plugins
-server.register(fastifyCookie, {
-	secret: process.env.COOKIE_SECRET || "32-character-dev-cookie-secret-yeah",
-	hook: "onRequest",
+server.register(fastifySecureSession, {
+	key: fs.readFileSync(path.join(__dirname, "secret-key")),
+	secret: process.env.SESSION_SECRET,
+	salt: process.env.SESSION_SALT,
+	cookie: {
+		path: "/",
+		httpOnly: true,
+		secure: true,
+	},
 });
-server.register(dbPlugin);
 
 // Get the directory paths - resolve from project root
 const rootDir = path.resolve(process.cwd());
@@ -51,28 +55,17 @@ async function registerFrontendServing() {
 }
 
 /* Strava Routes */
-server.get("/strava/auth", async (request, reply) =>
+server.get("/api/user/auth", async (_request, reply) =>
 	reply.redirect(
 		// TODO - set this to permanent domain - currently set to localhost because local IP not allowed by Strava
 		STRAVA_OAUTH_URL,
 	),
 );
-server.get("/strava/auth/callback", StravaAuthController.stravaAuthCallback);
-server.get("/strava/auth/refresh", StravaAuthController.refreshAuth);
-server.get("/strava/activities", StravaActivitiesController.syncActivities);
-
-/* App Auth */
-server.get("/auth/login", InternalAuthController.login);
-server.post("/auth/logout", InternalAuthController.logout);
-server.get("/auth/status", InternalAuthController.status);
-
-/* Internal API */
-server.get("/api/activities", activitiesController.getActivities);
-server.get(
-	"/api/activities/polylines",
-	activitiesController.getActivitiesPolylines,
-);
-server.get("/api/activity", activitiesController.getActivity);
+server.get("/api/user/auth/callback", StravaAuthController.stravaAuthCallback);
+// TODO Refresh
+// server.get("/api/user/auth/refresh", StravaAuthController.refreshAuth);
+server.get("/api/user/auth/status", StravaAuthController.status);
+server.get("/api/activities", StravaActivitiesController.getActivities);
 
 // Catch-all route for SPA: serve index.html for all non-API routes
 // This must be registered LAST so API routes take precedence

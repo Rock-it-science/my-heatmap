@@ -10,11 +10,13 @@ import {
 } from "@chakra-ui/react";
 import * as L from "leaflet";
 import "leaflet.heat";
-import { ActivityPolyline } from "@/types";
 import { FaCircle } from "react-icons/fa";
-import { createActivityPopup } from "@/components/map/leaflet/activity-popup";
+import { createActivityPopup } from "./leaflet/activity-popup";
 import { initMap } from "./leaflet/map";
 import { createHeatLayer } from "./activities/heat-layer";
+import { fetchStravaActivities } from "./activities/strava-api";
+import { StravaActivity } from "@/types";
+import { filterActivitiesEmptyMap } from "./activities/utils";
 
 export function MapApp() {
 	const [loading, setLoading] = useState(true);
@@ -43,7 +45,7 @@ export function MapApp() {
 
 	/** Activity geo data */
 	const [activityPolyLines, setActivityPolyLines] = useState<
-		ActivityPolyline[] | undefined
+		StravaActivity[] | undefined
 	>();
 	const [activityColorMap, setActivityColorMap] = useState<
 		{ sportType: string; sportTypeFormatted: string; color: string }[]
@@ -54,13 +56,8 @@ export function MapApp() {
 		(async () => {
 			try {
 				setLoading(true);
-				const response = await fetch("/api/activities/polylines");
-				if (response.ok) {
-					const data = await response.json();
-					setActivityPolyLines(data);
-				} else {
-					throw Error();
-				}
+				const activities = await fetchStravaActivities();
+				setActivityPolyLines(activities);
 			} catch (err) {
 				console.error("Error fetching activities:", err);
 				setError("Error loading activities. Please try again.");
@@ -91,7 +88,7 @@ export function MapApp() {
 							/(?!^)(?=[A-Z])/g,
 							" ",
 						),
-						color: activity.color,
+						color: activity.sportTypeColour,
 					});
 				}
 			}
@@ -135,7 +132,7 @@ export function MapApp() {
 				const activityLineLayer = L.polyline(
 					activityPolyline.polylinePoints,
 					{
-						color: activityPolyline.color,
+						color: activityPolyline.sportTypeColour,
 						opacity: 0.2,
 					},
 				);

@@ -1,14 +1,12 @@
-import { MapApp } from "@/components/map/map-app";
+import { MapApp } from "../modules/map/map-app";
 import MenuBar from "@/components/MenuBar";
 import { Box } from "@chakra-ui/react";
 
-function HeatmapPage() {
+export function HeatmapPage() {
 	return (
 		<Box className="layout heatmap-page">
 			<MenuBar />
-			<MapApp/>
+			<MapApp />
 		</Box>
-	)
+	);
 }
-
-export default HeatmapPage;

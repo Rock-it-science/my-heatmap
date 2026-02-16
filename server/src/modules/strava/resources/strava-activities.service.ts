@@ -1,32 +1,32 @@
 import StravaApiV3, { DetailedActivityResponse } from "strava-v3";
-import { PrismaClient } from "../../../../generated/prisma";
-import { PrismaStravaTokenRepository } from "../auth/strava-auth.stores";
+import { StravaAuth } from "../../../types/strava.types";
+import { StravaActivity } from "./strava-activities.types";
+
+function mapSportColor(sportType: string): string {
+	// TODO Expand this
+	switch (sportType) {
+		case "Ride":
+			return "#FA8334";
+		case "GravelRide":
+			return "#fffd77";
+		case "MountainBikeRide":
+			return "#388697";
+		case "hike":
+			return "#271033";
+		default:
+			return "#ffe882";
+	}
+}
 
 export const StravaActivitiesService = {
 	/**
-	 * Loads detailed information about all activities for the authenticated athlete and stores them in the database.
+	 * Loads detailed information about all activities for the authenticated athlete, decodes the polyline map data, categorizes the sport color, and returns as a list of objects.
 	 * @param accessToken
 	 * @returns list of detailed activities
 	 */
-	syncAthleteActivities: async (
-		athleteId: number,
-		prismaClient: PrismaClient | null,
-	) => {
-		if (!prismaClient) {
-			throw Error("Database not initialized");
-		}
-		const tokenRepository = new PrismaStravaTokenRepository(prismaClient);
-
-		// Get access token from database
-		if (!tokenRepository) {
-			throw Error("Could not find token repository");
-		}
-		const accessToken = await tokenRepository.getAccessToken(athleteId);
-		if (!accessToken || !accessToken.tokenCode) {
-			throw Error("No valid token found for athlete");
-		}
-
-		StravaApiV3.client(accessToken.tokenCode);
+	getActivities: async (stravaAuth: StravaAuth) => {
+		StravaApiV3.client(stravaAuth.accessToken.code);
+		const athleteId = stravaAuth.athlete.id;
 
 		// List all athlete activities
 		let activityList: any[] = [];
@@ -44,60 +44,42 @@ export const StravaActivitiesService = {
 				console.log(response);
 				break;
 			}
+			break; // TODO For testing
 		}
 
-		console.log("Done loading activities");
+		console.log("Done listing activities");
 
-		// For each activity, check if its already in the database, and if not fetch detailed information from Strava and insert to db
-		const existingUserActivityIdsResult =
-			await prismaClient.stravaActivity.findMany({
-				select: { id: true },
-				where: { athleteId },
-			});
-		const existingUserActivityIds = existingUserActivityIdsResult.map(
-			(activityResult) => Number(activityResult.id),
-		);
-		let newActivities: any[] = [];
+		let stravaActivities: StravaActivity[] = [];
 		for (const activity of activityList) {
-			if (!existingUserActivityIds.includes(activity.id)) {
-				let activityRes: DetailedActivityResponse;
-				try {
-					activityRes = await StravaApiV3.activities.get({
-						id: activity.id,
-					});
-				} catch (error) {
-					console.log(
-						`Failed fetching activity from strava, code: ${error}`,
-					);
-					break;
-				}
-				const record = {
-					...activityRes,
-					id: parseInt(activityRes.id),
-					athleteId: athleteId,
-				};
-				newActivities.push(record);
+			let activityRes: DetailedActivityResponse;
+			try {
+				activityRes = await StravaApiV3.activities.get({
+					id: activity.id,
+				});
+			} catch (error) {
+				console.log(
+					`Failed fetching activity from strava, code: ${error}`,
+				);
+				break;
 			}
-		}
 
-		console.log(
-			`Inserting ${newActivities.length} activities into database`,
-		);
-		try {
-			await prismaClient.stravaActivity.createMany({
-				data: newActivities,
+			stravaActivities.push({
+				id: activityRes.id,
+				athleteId,
+				name: activityRes.name,
+				distance: activityRes.distance,
+				elapsedTime: activityRes.elapsed_time,
+				movingTime: activityRes.moving_time,
+				totalElevationGain: activityRes.total_elevation_gain,
+				sportType: activityRes.sport_type,
+				sportTypeColour: mapSportColor(activityRes.sport_type),
+				startDate: activityRes.start_date,
+				mapPolyline: activityRes.map?.polyline,
+				gearId: activityRes.gear_id,
+				description: activityRes.description,
 			});
-		} catch (error) {
-			console.log(`Failed inserting to database: ${error}`);
 		}
 
-		const newCount = await prismaClient.stravaActivity.count({
-			where: { athleteId },
-		});
-		console.log(
-			`There are now ${newCount} records for this athlete in the database`,
-		);
-
-		return true;
+		return stravaActivities;
 	},
 };
