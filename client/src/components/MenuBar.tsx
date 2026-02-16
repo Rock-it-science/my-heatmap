@@ -6,9 +6,7 @@ function MenuBar() {
 
 	const cta = {
 		text: isLoggedIn ? "Dashboard" : "Connect Account",
-		link: isLoggedIn
-			? "/heatmap"
-			: `${import.meta.env.VITE_SERVER_URL}/api/user/auth`,
+		link: isLoggedIn ? "/heatmap" : "/api/auth",
 	};
 
 	const onClickCTA = () => {

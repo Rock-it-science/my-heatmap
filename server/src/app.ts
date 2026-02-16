@@ -1,19 +1,20 @@
 import path from "path";
-import { readFileSync } from "fs";
 import { fastify } from "fastify";
-import { fastifyStatic } from "@fastify/static";
-import { fastifyHttpProxy } from "@fastify/http-proxy";
 import { fastifySecureSession } from "@fastify/secure-session";
+import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { StravaActivitiesController } from "./modules/strava/resources/strava-activities.controller";
 import { StravaAuthController } from "./modules/strava/auth/strava-auth.controller";
 import { STRAVA_OAUTH_URL } from "./types/constants";
 import * as fs from "node:fs";
 import dotenv from "dotenv";
+import {
+	GetActivitiesParams,
+	GetActivitiesSchema,
+} from "../../shared/schemas/strava-activities.schema";
 
 dotenv.config();
-const server = fastify();
+const server = fastify().withTypeProvider<TypeBoxTypeProvider>();
 
-// Register plugins
 server.register(fastifySecureSession, {
 	key: fs.readFileSync(path.join(__dirname, "secret-key")),
 	secret: process.env.SESSION_SECRET,
@@ -25,17 +26,21 @@ server.register(fastifySecureSession, {
 	},
 });
 
-/* Strava Routes */
-server.get("/api/user/auth", async (_request, reply) =>
-	reply.redirect(
-		// TODO - set this to permanent domain - currently set to localhost because local IP not allowed by Strava
-		STRAVA_OAUTH_URL,
-	),
-);
-server.get("/api/user/auth/callback", StravaAuthController.stravaAuthCallback);
-server.get("/api/user/auth/refresh", StravaAuthController.refreshAuth);
-server.get("/api/user/auth/status", StravaAuthController.status);
-server.get("/api/activities", StravaActivitiesController.getActivities);
+/* Routes */
+server.get("/api/auth", StravaAuthController.stravaAuthRedirect);
+server.get("/api/auth/callback", StravaAuthController.stravaAuthCallback);
+server.get("/api/auth/refresh", StravaAuthController.refreshAuth);
+server.get("/api/auth/status", StravaAuthController.status);
+
+server.get("/api/activities", {
+	schema: {
+		querystring: GetActivitiesParams,
+		response: {
+			200: GetActivitiesSchema,
+		},
+	},
+	handler: StravaActivitiesController.getActivities,
+});
 
 async function startServer() {
 	try {

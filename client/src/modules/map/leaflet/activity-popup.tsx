@@ -9,8 +9,11 @@ import {
 } from "@chakra-ui/react";
 import { createRoot } from "react-dom/client";
 import { JSX, useEffect, useState } from "react";
-import { StravaActivity } from "@/types";
-import { fetchStravaActivities } from "@/modules/api/strava";
+import { StravaActivity } from "@shared/index";
+import {
+	fetchStravaActivities,
+	getLocalActivitiesIfAvailable,
+} from "@/modules/api/strava";
 
 /** Popup component that gets asynchronously populated with activity details */
 function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {
@@ -20,7 +23,7 @@ function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {
 	useEffect(() => {
 		(async () => {
 			try {
-				const activities = await fetchStravaActivities();
+				const activities = getLocalActivitiesIfAvailable();
 				if (activities) {
 					const activity = activities.find(
 						(activity) => activity.id.toString() === activityId,

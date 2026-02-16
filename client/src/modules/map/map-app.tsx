@@ -16,7 +16,7 @@ import { createActivityPopup } from "./leaflet/activity-popup";
 import { initMap } from "./leaflet/map";
 import { createHeatLayer } from "./activities/heat-layer";
 import { fetchStravaActivities } from "../api/strava";
-import { StravaActivity } from "@/types";
+import { StravaActivity } from "@shared/index";
 
 export function MapApp() {
 	const [loading, setLoading] = useState(true);

@@ -11,7 +11,7 @@ Backend stores application-level secret key for Strava, and holds client secret 
 ```mermaid
 flowchart TD
     A[User visits app] -->
-    B[GET /user/authenticated] -->
+    B[GET /api/authenticated] -->
     C{
         Server checks session ID
         header to see if there is

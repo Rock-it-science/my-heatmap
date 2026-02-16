@@ -1,9 +1,6 @@
 import StravaApiV3, { DetailedActivityResponse } from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
-import {
-	GetActivitiesResponse,
-	StravaActivity,
-} from "./strava-activities.types";
+import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
 
 function mapSportColor(sportType: string): string {
 	// TODO Expand this

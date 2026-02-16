@@ -7,7 +7,7 @@ export function HomePage() {
 
 	const cta = {
 		text: isLoggedIn ? "Dashboard" : "Connect Account",
-		link: isLoggedIn ? "/heatmap" : "/api/user/auth",
+		link: isLoggedIn ? "/heatmap" : "/api/auth",
 	};
 
 	const onClickCTA = () => {

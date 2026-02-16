@@ -1,7 +1,11 @@
-import { StravaActivity, StravaActivityResponse } from "@/types";
 import polyline from "@mapbox/polyline";
+import {
+	GetActivitiesResponse,
+	StravaActivity,
+	StravaActivityRaw,
+} from "@shared/schemas/strava-activities.schema";
 
-function getLocalActivitiesIfAvailable(): StravaActivity[] | false {
+export function getLocalActivitiesIfAvailable(): StravaActivity[] | false {
 	const localActivities = localStorage.getItem("stravaActivities");
 	if (localActivities) {
 		const parsedActivities = JSON.parse(localActivities);
@@ -25,26 +29,36 @@ function storeActivities(filteredActivities: StravaActivity[]) {
 	}
 }
 
-async function fetchStravaActivitiesFromAPI(): Promise<
-	StravaActivityResponse[]
-> {
+async function fetchStravaActivitiesFromAPI(): Promise<StravaActivityRaw[]> {
 	console.log("Fetching activities from API");
-	let rawActivities: StravaActivityResponse[] | undefined;
+	let rawActivities: StravaActivityRaw[] | undefined;
 	let error;
 	let page = 1;
 	while (!error) {
 		try {
 			const response = await fetch(`/api/activities?page=${page}`);
+			if (response.status !== 200) {
+				error = `Error fetching activities from API, status ${response.status}`;
+			}
 			const stravaActivitiesResponse =
-				(await response.json()) as StravaActivityResponse[];
-			rawActivities?.push(...stravaActivitiesResponse);
+				(await response.json()) as GetActivitiesResponse;
+			rawActivities?.push(...stravaActivitiesResponse.activities);
+			if (stravaActivitiesResponse.rateLimitExceeded) {
+				error = "Rate limit exceeded";
+			}
+			if (stravaActivitiesResponse.error) {
+				error = stravaActivitiesResponse.error;
+			}
+			if (stravaActivitiesResponse.activities.length === 0) {
+				break;
+			}
 			page++;
-		} catch (error) {
-			error = `Error fetching activities from API: ${error}`;
+		} catch (e) {
+			error = `Error fetching activities from API: ${e}`;
 		}
 	}
 	if (!rawActivities || rawActivities.length === 0) {
-		throw Error(error);
+		throw Error(error ?? "No activities found");
 	}
 	if (error) {
 		console.warn(`Partial ${error}`);
@@ -53,8 +67,8 @@ async function fetchStravaActivitiesFromAPI(): Promise<
 }
 
 function decodePolylinePoints(
-	stravaActivitiesResponse: StravaActivityResponse[],
-): (StravaActivityResponse & { polylinePoints?: [number, number][] })[] {
+	stravaActivitiesResponse: StravaActivityRaw[],
+): (StravaActivityRaw & { polylinePoints?: [number, number][] })[] {
 	const stravaActivities = stravaActivitiesResponse.map((activity) => {
 		const polylinePoints = activity.mapPolyline
 			? polyline.decode(activity.mapPolyline)
@@ -68,7 +82,7 @@ function decodePolylinePoints(
 }
 
 function filterActivitiesEmptyMap(
-	activities: (StravaActivityResponse & {
+	activities: (StravaActivityRaw & {
 		polylinePoints?: [number, number][];
 	})[],
 ): StravaActivity[] {

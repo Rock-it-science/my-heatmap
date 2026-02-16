@@ -12,6 +12,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"shared": "file:../shared",
 		"@chakra-ui/react": "^3.29.0",
 		"@emotion/react": "^11.14.0",
 		"@types/leaflet.heat": "^0.2.5",
