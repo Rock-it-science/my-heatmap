@@ -5,8 +5,8 @@
 			{
 				"source": "/api/**",
 				"run": {
-					"serviceId": "cloud-run-url", // TODO
-					"region": "run-run-region" // TODO
+					"serviceId": "https://my-heatmap-404269582941.us-central1.run.app/",
+					"region": "us-central1"
 				}
 			}
 		],
