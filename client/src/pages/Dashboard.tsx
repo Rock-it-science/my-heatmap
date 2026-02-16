@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { DetailedActivityResponse } from "../types";
 import MenuBar from "@/components/MenuBar";
 import { Box, Text, Table, Button } from "@chakra-ui/react";
+import { StravaActivity } from "@/types";
+import { fetchStravaActivities } from "@/modules/api/strava";
 
 export function DashboardPage() {
-	const [activities, setActivities] = useState<DetailedActivityResponse[]>([]);
+	const [activities, setActivities] = useState<StravaActivity[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -13,39 +14,18 @@ export function DashboardPage() {
 	}, []);
 
 	/**
-	 * Fetches activities from app db
+	 * Fetches activities from Strava
 	 */
-	async function fetchActivities() {
+	const fetchActivities = async () => {
 		try {
 			setLoading(true);
-			const response = await fetch(`/api/activities`);
-			if (response.ok) {
-				const data = await response.json();
-				setActivities(data);
+			const response = await fetchStravaActivities();
+			if (response) {
+				setActivities(response);
 			} else {
 				setError(
 					"Failed to load activities. Please try connecting Strava again.",
 				);
-			}
-		} catch (err) {
-			console.error("Error fetching activities:", err);
-			setError("Error loading activities. Please try again.");
-		} finally {
-			setLoading(false);
-		}
-	}
-
-	/**
-	 * Triggers sync from Strava to app db
-	 */
-	const onClickSyncActivities = async () => {
-		try {
-			setLoading(true);
-			const response = await fetch(`/strava/activities`);
-			if (response.ok) {
-				await fetchActivities();
-			} else {
-				setError("Failed to sync activities.");
 			}
 		} catch (err) {
 			console.error("Error syncing activities:", err);
@@ -58,7 +38,7 @@ export function DashboardPage() {
 		<Box className="layout dashboard-page">
 			<MenuBar />
 			<Text textStyle="2xl">Dashboard</Text>
-			<Button onClick={onClickSyncActivities}>Sync activities</Button>
+			<Button onClick={fetchActivities}>Sync activities</Button>
 			<Box id="dashboard-content">
 				{loading && <p>Loading activities...</p>}
 				{error && <p>{error}</p>}

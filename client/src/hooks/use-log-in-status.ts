@@ -9,11 +9,11 @@ export const useLoginStatus = () => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const response = await fetch("/api/auth/status");
+				const response = await fetch("/api/user/auth/status");
 				if (response.ok) {
-					const payload: { loggedIn: boolean } =
+					const payload: { isLoggedIn: boolean } =
 						await response.json();
-					setIsLoggedIn(payload.loggedIn);
+					setIsLoggedIn(payload.isLoggedIn);
 				}
 			} catch (Error) {
 				console.log("Error determing if user is logged in");

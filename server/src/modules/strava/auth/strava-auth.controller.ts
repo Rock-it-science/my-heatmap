@@ -21,7 +21,7 @@ export const StravaAuthController = {
 				scope,
 			);
 
-			const expiresAtDate = new Date(response.expires_at);
+			const expiresAtDate = new Date(response.expires_at * 1000);
 			request.session.set("stravaAuth", {
 				accessToken: {
 					code: response.access_token,
@@ -69,11 +69,12 @@ export const StravaAuthController = {
 		if (
 			stravaAuth &&
 			stravaAuth.accessToken &&
-			stravaAuth.accessToken.expiresAt > new Date()
+			new Date(stravaAuth.accessToken.expiresAt).getTime() >
+				new Date().getTime()
 		) {
-			return true;
+			return reply.send({ isLoggedIn: true });
 		} else {
-			return false;
+			return reply.send({ isLoggedIn: false });
 		}
 	},
 };

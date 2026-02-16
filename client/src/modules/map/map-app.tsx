@@ -14,9 +14,8 @@ import { FaCircle } from "react-icons/fa";
 import { createActivityPopup } from "./leaflet/activity-popup";
 import { initMap } from "./leaflet/map";
 import { createHeatLayer } from "./activities/heat-layer";
-import { fetchStravaActivities } from "./activities/strava-api";
+import { fetchStravaActivities } from "../api/strava";
 import { StravaActivity } from "@/types";
-import { filterActivitiesEmptyMap } from "./activities/utils";
 
 export function MapApp() {
 	const [loading, setLoading] = useState(true);
