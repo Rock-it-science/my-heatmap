@@ -16,3 +16,9 @@ export interface StravaActivity {
 	gearId?: string;
 	description?: string;
 }
+
+export interface GetActivitiesResponse {
+	activities: StravaActivity[];
+	rateLimitExceeded: boolean;
+	error: string;
+}

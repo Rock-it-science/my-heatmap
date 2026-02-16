@@ -1,17 +1,20 @@
 import StravaApiV3, { DetailedActivityResponse } from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
-import { StravaActivity } from "./strava-activities.types";
+import {
+	GetActivitiesResponse,
+	StravaActivity,
+} from "./strava-activities.types";
 
 function mapSportColor(sportType: string): string {
 	// TODO Expand this
 	switch (sportType) {
 		case "Ride":
 			return "#FA8334";
-		case "GravelRide":
+		case "Gravel Ride":
 			return "#fffd77";
-		case "MountainBikeRide":
+		case "Mountain Bike Ride":
 			return "#388697";
-		case "hike":
+		case "Hike":
 			return "#271033";
 		default:
 			return "#ffe882";
@@ -26,55 +29,52 @@ export const StravaActivitiesService = {
 	 */
 	getActivities: async (
 		stravaAuth: StravaAuth,
-	): Promise<StravaActivity[]> => {
+		page: number,
+	): Promise<GetActivitiesResponse> => {
 		StravaApiV3.client(stravaAuth.accessToken.code);
 		const athleteId = stravaAuth.athlete.id;
 
 		// List all athlete activities
-		let activityList: StravaActivity[] = [];
-		let error = null;
-		let pageCounter = 1;
-		while (!error) {
-			let activityRes: any[];
-			try {
-				activityRes = await StravaApiV3.athlete.listActivities({
-					page: pageCounter,
-				});
-			} catch (e) {
-				error = e;
-				break;
-			}
-			pageCounter++;
-			console.log(`Page ${pageCounter} of activities`);
-			if (activityRes.length > 0) {
-				for (const activity of activityRes) {
-					activityList.push({
-						id: activity.id,
-						athleteId,
-						name: activity.name,
-						distance: activity.distance,
-						elapsedTime: activity.elapsed_time,
-						movingTime: activity.moving_time,
-						totalElevationGain: activity.total_elevation_gain,
-						sportType: activity.sport_type,
-						sportTypeColour: mapSportColor(activity.sport_type),
-						startDate: activity.start_date,
-						mapPolyline: activity.map?.summary_polyline,
-						gearId: activity.gear_id,
-						description: activity.description,
-					});
-				}
-			} else {
-				error = "No activities on page";
-			}
+		let activityRes: any[] | undefined;
+		let error: string = "";
+		try {
+			activityRes = await StravaApiV3.athlete.listActivities({ page });
+		} catch (e) {
+			error = `Error listing activities for athlete ${athleteId}: ${e}`;
+			console.log(error);
 		}
+		const rateLimitExceeded = StravaApiV3.rateLimiting.exceeded();
 
-		console.log("Done listing activities");
-
-		if (activityList.length > 0) {
-			return activityList;
-		} else {
-			throw Error("Failed to find activities");
+		// Early return if no data in response
+		if (!activityRes) {
+			return {
+				activities: [],
+				rateLimitExceeded,
+				error,
+			};
 		}
+		const activityList = activityRes.map((activity) => {
+			return {
+				id: activity.id,
+				athleteId,
+				name: activity.name,
+				distance: activity.distance,
+				elapsedTime: activity.elapsed_time,
+				movingTime: activity.moving_time,
+				totalElevationGain: activity.total_elevation_gain,
+				sportType: activity.sport_type,
+				sportTypeColour: mapSportColor(activity.sport_type),
+				startDate: activity.start_date,
+				mapPolyline: activity.map?.summary_polyline,
+				gearId: activity.gear_id,
+				description: activity.description,
+			};
+		});
+
+		return {
+			activities: activityList,
+			rateLimitExceeded,
+			error,
+		};
 	},
 };

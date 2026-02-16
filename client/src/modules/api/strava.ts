@@ -29,14 +29,27 @@ async function fetchStravaActivitiesFromAPI(): Promise<
 	StravaActivityResponse[]
 > {
 	console.log("Fetching activities from API");
-	try {
-		const response = await fetch("/api/activities");
-		const stravaActivitiesResponse =
-			(await response.json()) as StravaActivityResponse[];
-		return stravaActivitiesResponse;
-	} catch (error) {
-		throw Error(`Error fetching activities from API: ${error}`);
+	let rawActivities: StravaActivityResponse[] | undefined;
+	let error;
+	let page = 1;
+	while (!error) {
+		try {
+			const response = await fetch(`/api/activities?page=${page}`);
+			const stravaActivitiesResponse =
+				(await response.json()) as StravaActivityResponse[];
+			rawActivities?.push(...stravaActivitiesResponse);
+			page++;
+		} catch (error) {
+			error = `Error fetching activities from API: ${error}`;
+		}
 	}
+	if (!rawActivities || rawActivities.length === 0) {
+		throw Error(error);
+	}
+	if (error) {
+		console.warn(`Partial ${error}`);
+	}
+	return rawActivities;
 }
 
 function decodePolylinePoints(

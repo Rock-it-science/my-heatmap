@@ -42,7 +42,7 @@ flowchart TD
 
 The app interfaces with the Strava API to fetch activity data, especially Polyline map data. This is all included in the `GET /athlete/activities` endpoint.
 
-Requests are handled on the backend to keep the user's Strava access token a secret. This also allows us to use the Strava node npm library to abstract away HTTP requests.
+Requests are handled on the backend to keep the user's Strava access token a secret. This also allows us to use the [Strava-v3](https://www.npmjs.com/package/strava-v3) node npm library to abstract away HTTP requests.
 
 Activity data is not stored on our backend because of costs associated with storing large volumes of data. Instead, the activity data is passed to the user and stored in local browser storage. This also enhances privacy as no pesonal data is stored on our server.
 
