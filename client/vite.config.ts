@@ -25,9 +25,6 @@ export default defineConfig({
 		watch: {
 			ignored: ["**/node_modules/**", "**/.git/**"],
 		},
-		hmr: {
-			overlay: true,
-		},
 		proxy: {
 			"/api": {
 				target: "http://localhost:8085",
