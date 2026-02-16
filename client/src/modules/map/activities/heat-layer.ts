@@ -1,4 +1,4 @@
-import { StravaActivity } from "@/types";
+import { StravaActivity } from "shared/index";
 import * as L from "leaflet";
 
 /**

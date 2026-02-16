@@ -3,7 +3,7 @@ import {
 	GetActivitiesResponse,
 	StravaActivity,
 	StravaActivityRaw,
-} from "@shared/schemas/strava-activities.schema";
+} from "shared/schemas/strava-activities.schema";
 
 export function getLocalActivitiesIfAvailable(): StravaActivity[] | false {
 	const localActivities = localStorage.getItem("stravaActivities");

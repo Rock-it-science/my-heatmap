@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import { createRoot } from "react-dom/client";
 import { JSX, useEffect, useState } from "react";
-import { StravaActivity } from "@shared/index";
+import { StravaActivity } from "shared/index";
 import {
 	fetchStravaActivities,
 	getLocalActivitiesIfAvailable,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import MenuBar from "@/components/MenuBar";
 import { Box, Text, Table, Button } from "@chakra-ui/react";
-import { StravaActivity } from "@/types";
+import { StravaActivity } from "shared/index";
 import { fetchStravaActivities } from "@/modules/api/strava";
 
 export function DashboardPage() {
