@@ -8,6 +8,10 @@
 					"serviceId": "my-heatmap",
 					"region": "us-central1"
 				}
+			},
+			{
+				"source": "**",
+				"destination": "/index.html"
 			}
 		],
 		"ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
