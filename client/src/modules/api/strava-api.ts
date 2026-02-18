@@ -37,30 +37,38 @@ export async function fetchStravaActivitiesFromAPI(): Promise<
 	let error;
 	let page = 1;
 	while (!error) {
+		let response: Response;
 		try {
-			const response = await fetch(`/api/activities?page=${page}`);
-			if (response.status !== 200) {
-				error = `Error fetching activities from API, status ${response.status}`;
-			}
-			const stravaActivitiesResponse =
-				(await response.json()) as GetActivitiesResponse;
-			rawActivities?.push(...stravaActivitiesResponse.activities);
-			if (stravaActivitiesResponse.rateLimitExceeded) {
-				error = "Rate limit exceeded";
-			}
-			if (stravaActivitiesResponse.error) {
-				error = stravaActivitiesResponse.error;
-			}
-			if (stravaActivitiesResponse.activities.length === 0) {
-				break;
-			}
-			page++;
+			response = await fetch(`/api/activities?page=${page}`);
 		} catch (e) {
-			error = `Error fetching activities from API: ${e}`;
+			error = e;
+			break;
 		}
+		if (response.status !== 200) {
+			error = `status ${response.status}`;
+			break;
+		}
+		const stravaActivitiesResponse =
+			(await response.json()) as GetActivitiesResponse;
+		if (stravaActivitiesResponse.rateLimitExceeded) {
+			error = "Rate limit exceeded";
+		}
+		if (stravaActivitiesResponse.error) {
+			error = stravaActivitiesResponse.error;
+			break;
+		}
+		if (stravaActivitiesResponse.activities.length === 0) {
+			break;
+		}
+		rawActivities?.push(...stravaActivitiesResponse.activities);
+		page++;
 	}
 	if (!rawActivities || rawActivities.length === 0) {
-		throw Error(error ?? "No activities found");
+		throw Error(
+			error
+				? `Error fetching activities from API: ${error}`
+				: "No activities found",
+		);
 	}
 	if (error) {
 		console.warn(`Received error after data: ${error}`);

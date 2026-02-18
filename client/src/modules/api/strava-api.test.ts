@@ -156,4 +156,26 @@ describe("fetchStravaActivitiesFromAPI", () => {
 		fetchSpy.mockRestore();
 		consoleWarnSpy.mockRestore();
 	});
+	test("should throw error if request failed", async () => {
+		const fetchSpy = vi.spyOn(global, "fetch");
+
+		fetchSpy
+			// First page: error status
+			.mockImplementationOnce(() =>
+				Promise.resolve({
+					status: 404,
+					json: () => Promise.resolve({}),
+				} as Response),
+			);
+
+		try {
+			await fetchStravaActivitiesFromAPI();
+		} catch (error) {
+			expect(error.message).toBe(
+				"Error fetching activities from API: status 404",
+			);
+		}
+
+		fetchSpy.mockRestore();
+	});
 });
