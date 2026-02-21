@@ -11,9 +11,12 @@ import {
 } from "../../shared/schemas/strava-activities.schema";
 
 dotenv.config();
-const server = fastify().withTypeProvider<TypeBoxTypeProvider>();
+const server = fastify({
+	trustProxy: true,
+}).withTypeProvider<TypeBoxTypeProvider>();
 
 server.register(fastifySecureSession, {
+	cookieName: "__session",
 	key: Buffer.from(process.env.SESSION_SECRET as string, "hex"),
 	cookie: {
 		path: "/",
