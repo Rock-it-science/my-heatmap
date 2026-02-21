@@ -19,7 +19,7 @@ server.register(fastifySecureSession, {
 		path: "/",
 		httpOnly: true,
 		secure: true,
-		sameSite: "lax",
+		sameSite: "none",
 	},
 });
 server.register(cors, {

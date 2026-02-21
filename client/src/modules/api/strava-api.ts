@@ -39,7 +39,9 @@ export async function fetchStravaActivitiesFromAPI(): Promise<
 	while (!error) {
 		let response: Response;
 		try {
-			response = await fetch(`/api/activities?page=${page}`);
+			response = await fetch(`/api/activities?page=${page}`, {
+				credentials: "include",
+			});
 		} catch (e) {
 			error = e;
 			break;

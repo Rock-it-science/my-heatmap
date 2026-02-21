@@ -9,7 +9,9 @@ export const useLoginStatus = () => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const response = await fetch("/api/auth/status");
+				const response = await fetch("/api/auth/status", {
+					credentials: "include",
+				});
 				if (response.ok) {
 					const payload: { isLoggedIn: boolean } =
 						await response.json();
