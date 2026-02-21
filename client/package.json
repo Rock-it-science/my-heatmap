@@ -8,7 +8,8 @@
 		"build": "tsc && vitest run && vite build",
 		"preview": "vite preview",
 		"lint": "eslint src --ext ts,tsx",
-		"test": "vitest"
+		"test": "vitest",
+		"deploy": "firebase deploy"
 	},
 	"author": "",
 	"license": "ISC",

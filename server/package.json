@@ -8,7 +8,8 @@
 		"build": "tsc",
 		"lint": "eslint src --ext ts",
 		"test": "jest",
-		"start": "node dist/server/src/app.js"
+		"start": "node dist/server/src/app.js",
+		"deploy": "docker build . && gcloud builds submit --tag gcr.io/my-heatmap-487605/my-heatmap . && gcloud run deploy my-heatmap --image gcr.io/my-heatmap-487605/my-heatmap --port 8085 --region us-central1 --update-secrets=\"SESSION_SECRET=SESSION_SECRET:latest,STRAVA_CLIENT_SECRET=STRAVA_CLIENT_SECRET:latest\""
 	},
 	"author": "",
 	"license": "ISC",
