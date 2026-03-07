@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 
 import { HomePage, DashboardPage, HeatmapPage } from "./pages";
 import "@/styles/global.scss";
+import { aboutPage } from "./pages/About";
 
 const router = createBrowserRouter([
 	{
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
 	{
 		path: "heatmap",
 		Component: HeatmapPage,
+	},
+	{
+		path: "about",
+		Component: aboutPage,
 	},
 ]);
 

@@ -35,6 +35,9 @@ function MenuBar() {
 			<Link href="/dashboard" textStyle="xl">
 				<Text>Dashboard</Text>
 			</Link>
+			<Link href="/about" textStyle="xl">
+				<Text>About</Text>
+			</Link>
 			<Button
 				onClick={onClickCTA}
 				marginRight="10px"
