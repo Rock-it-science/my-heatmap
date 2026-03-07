@@ -2,7 +2,12 @@ import { Link, Text, VStack } from "@chakra-ui/react";
 
 export function aboutPage() {
 	return (
-		<VStack>
+		<VStack
+			alignItems="flex-start"
+			textAlign="left"
+			padding="96px"
+			width="60%"
+		>
 			<Text textStyle="2xl">About this app</Text>
 			<Text>
 				This app is a personoal project created by{" "}
@@ -10,6 +15,17 @@ export function aboutPage() {
 					Will McFarland
 				</Link>
 				.
+			</Text>
+			<Text textStyle="2xl">Security & Privacy</Text>
+			<Text>
+				While using this application, your Strava access token and
+				refresh token obtained from the Strava API via OAuth with the
+				granted scopes will be stored securely on our backend in memory
+				only. A session token will be securely stored in your browser to
+				identify your client with the backend. Strava secrets will never
+				be exchanged to the frontend. Strava activity data will however
+				be sent and stored on the browser in local storage. This data
+				will not be stored on our backend to ensure user privacy.
 			</Text>
 			<Text textStyle="2xl">Attributions</Text>
 			<Link
