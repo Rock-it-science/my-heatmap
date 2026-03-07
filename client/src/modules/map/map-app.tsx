@@ -9,12 +9,13 @@ import {
 	Slider,
 	Loader,
 } from "@chakra-ui/react";
-import * as L from "leaflet";
-import "leaflet.heat";
+import L from "./leaflet-setup";
 import { FaCircle } from "react-icons/fa";
-import { createActivityPopup } from "./leaflet/activity-popup";
-import { initMap } from "./leaflet/map";
-import { createHeatLayer } from "./activities/heat-layer";
+import { initMap } from "./map";
+import {
+	createActivityLinesLayerGroup,
+	createHeatLayer,
+} from "./activities/layers";
 import { fetchStravaActivities } from "../api/strava-api";
 import { StravaActivity } from "shared/index";
 
@@ -100,8 +101,6 @@ export function MapApp() {
 		}
 	}, [activityPolyLines]);
 
-	// TODO Show a loading symbol while loading is true
-
 	// Initialize the map - should only happen once, and should wait for mapref to be defined
 	useEffect(() => {
 		if (!mapContainerRef.current || mapRef.current) return;
@@ -117,6 +116,7 @@ export function MapApp() {
 		};
 	}, [mapContainerRef, mapRef]);
 
+	// Create layers
 	useEffect(() => {
 		if (
 			!mapRef.current ||
@@ -127,35 +127,17 @@ export function MapApp() {
 
 		const heatLayer = createHeatLayer(activityPolyLines);
 
-		const activityLinesLayer = L.layerGroup(
-			activityPolyLines.map((activityPolyline) => {
-				const activityLineLayer = L.polyline(
-					activityPolyline.polylinePoints,
-					{
-						color: activityPolyline.sportTypeColour,
-						opacity: 0.2,
-					},
-				);
-				(activityLineLayer as any).sportType =
-					activityPolyline.sportType;
-				activityLineLayer.bindPopup(
-					() => createActivityPopup(activityPolyline),
-					{
-						minWidth: 200,
-					},
-				);
-				return activityLineLayer;
-			}),
-		);
+		const activityLinesLayer =
+			createActivityLinesLayerGroup(activityPolyLines);
 
 		// Update refs and state with new layers
 		heatmapLayerRef.current = heatLayer;
 		activityLinesLayerRef.current = activityLinesLayer;
 
-		// Add heatmap layer by default
-		heatLayer.addTo(mapRef.current);
-		setHeatmapLayerEnabled(true);
-		setActivityLinesLayerEnabled(false);
+		// Add activity lines layer by default
+		activityLinesLayer.addTo(mapRef.current);
+		setHeatmapLayerEnabled(false);
+		setActivityLinesLayerEnabled(true);
 
 		return () => {
 			heatLayer.remove();
@@ -168,6 +150,13 @@ export function MapApp() {
 			...heatmapLayerRef.current.options,
 			radius: value,
 		});
+	};
+
+	const updateActivityLinesOpacity = (value: number) => {
+		activityLinesLayerRef.current?.eachLayer(
+			(layer: L.Layer) =>
+				((layer.options as L.PolylineOptions).opacity = value),
+		);
 	};
 
 	/**
@@ -219,7 +208,7 @@ export function MapApp() {
 
 	return (
 		<Box id="map">
-			{loading && <Loader />}
+			<Loader />
 			<Text
 				id="error-text"
 				hidden={!error}
@@ -286,6 +275,26 @@ export function MapApp() {
 								<Checkbox.Control />
 								<Checkbox.Label>Activity Lines</Checkbox.Label>
 							</Checkbox.Root>
+							<Slider.Root
+								defaultValue={[12]}
+								min={1}
+								max={25}
+								size="sm"
+								onValueChange={(d) =>
+									updateActivityLinesOpacity(d.value[0])
+								}
+							>
+								<Slider.Label>
+									Activity Line Opacity
+								</Slider.Label>
+								<Slider.ValueText />
+								<Slider.Control>
+									<Slider.Track>
+										<Slider.Range />
+									</Slider.Track>
+									<Slider.Thumbs />
+								</Slider.Control>
+							</Slider.Root>
 						</CheckboxGroup>
 					</Fieldset.Root>
 				</Box>

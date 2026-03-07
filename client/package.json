@@ -9,7 +9,7 @@
 		"preview": "vite preview",
 		"lint": "eslint src --ext ts,tsx",
 		"test": "vitest",
-		"deploy": "firebase deploy"
+		"deploy": "tsc && vitest run && vite build && firebase deploy"
 	},
 	"author": "",
 	"license": "ISC",
