@@ -2,6 +2,18 @@
 
 A map-centric view for your activity data.
 
+## Developer Instructions
+
+- Run `npm i` in both the client and server directories
+- Create a `.env` file in the `server/` directory and add the following keys with values:
+```
+SESSION_SECRET=<generated with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))">
+STRAVA_CLIENT_ID=<Obtained from Strava here: https://www.strava.com/settings/api>
+STRAVA_CLIENT_SECRET=<Obtained from Strava here: https://www.strava.com/settings/api>
+FRONTEND_URL=http://localhost:5173
+```
+- Run `npm run dev` from project root to run vite server and backend server
+
 ## Architecture
 
 ### Authentication

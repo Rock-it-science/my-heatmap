@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { StravaAuthService } from "./strava-auth.service";
 import { StravaCallbackRequest } from "./strava-auth.types";
-import { STRAVA_OAUTH_URL } from "../../../types/constants";
 
 export const StravaAuthController = {
 	stravaAuthRedirect: async (
@@ -10,7 +9,7 @@ export const StravaAuthController = {
 	) => {
 		reply.redirect(
 			// TODO - set this to permanent domain - currently set to localhost because local IP not allowed by Strava
-			STRAVA_OAUTH_URL,
+			`https://www.strava.com/oauth/authorize?client_id=175179&response_type=code&redirect_uri=${process.env.FRONTEND_URL}/api/auth/callback&approval_prompt=force&scope=read,activity:read`,
 		);
 	},
 	stravaAuthCallback: async (
