@@ -8,6 +8,8 @@ import {
 	HStack,
 	Slider,
 	Loader,
+	Spinner,
+	Dialog,
 } from "@chakra-ui/react";
 import L from "./leaflet-setup";
 import { FaCircle } from "react-icons/fa";
@@ -18,6 +20,7 @@ import {
 } from "./activities/layers";
 import { fetchStravaActivities } from "../api/strava-api";
 import { StravaActivity } from "shared/index";
+import { SpinnerDialog } from "@/components/SpinnerDialog";
 
 export function MapApp() {
 	const [loading, setLoading] = useState(true);
@@ -208,16 +211,21 @@ export function MapApp() {
 
 	return (
 		<Box id="map">
-			<Loader />
 			<Text
 				id="error-text"
 				hidden={!error}
 				padding="8px"
 				color="red"
 				background="white"
+				zIndex="900"
+				position="absolute"
+				left={0}
+				bottom={0}
+				fontSize="xl"
 			>
 				{error}
 			</Text>
+			<SpinnerDialog loading={loading} />
 			<Box
 				ref={mapContainerRef}
 				id="map"
@@ -226,7 +234,7 @@ export function MapApp() {
 				<Box
 					ref={mapControlsRef}
 					id="map-controls"
-					zIndex="max"
+					zIndex="500"
 					position="absolute"
 					right="0"
 					top="0"
