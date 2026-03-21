@@ -3,6 +3,8 @@ import { StravaAthleteProvider } from "../../../providers/strava/StravaProviders
 import { SummaryActivity } from "strava-v3";
 import { StravaActivitiesService } from "./strava-activities.service";
 
+jest.mock("../../../providers/strava/StravaProviders");
+
 describe("strava-activities-service", () => {
 	describe("StravaActivitiesService", () => {
 		describe("getActivities", () => {
@@ -15,16 +17,22 @@ describe("strava-activities-service", () => {
 				},
 			} as StravaAuth;
 
-			const mockActivitiesResponse = [{}] as SummaryActivity[];
+			const MockAthleteProvider =
+				StravaAthleteProvider as jest.MockedClass<
+					typeof StravaAthleteProvider
+				>;
+			const mockAthleteProviderInstance = new MockAthleteProvider(
+				mockAuth,
+			) as jest.Mocked<StravaAthleteProvider>;
+
+			const mockActivitiesResponse = [] as SummaryActivity[];
 			it("should return page of activities", async () => {
-				(
-					StravaAthleteProvider.prototype.listActivities as jest.Mock
-				).mockResolvedValue(mockActivitiesResponse);
-				const response = StravaActivitiesService.getActivities(
-					mockAuth,
-					1,
+				const service = new StravaActivitiesService(
+					mockAthleteProviderInstance,
 				);
-				expect(response).toEqual(mockActivitiesResponse[0]);
+
+				const result = await service.getActivities(0);
+				expect(result.activities).toEqual(mockActivitiesResponse);
 			});
 		});
 	});
