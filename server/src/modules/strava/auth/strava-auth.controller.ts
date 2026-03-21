@@ -88,7 +88,7 @@ export const StravaAuthController = {
 			stravaAuth &&
 			stravaAuth.accessToken &&
 			new Date(stravaAuth.accessToken.expiresAt).getTime() >
-			new Date().getTime()
+				new Date().getTime()
 		) {
 			return reply.send({ isLoggedIn: true });
 		} else {

@@ -1,4 +1,4 @@
-import StravaApi from "strava-v3";
+import StravaApi, { StreamSet } from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
 import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
 import { StravaAthleteProvider } from "../../../providers/strava/StravaProviders";
@@ -19,6 +19,32 @@ function mapSportColor(sportType: string): string {
 	}
 }
 
+/**
+ * Take stream response and parse it into a list of 3D coordinates (lat, lng, altitude)
+ */
+function parseStreamResponse(
+	streamSets: StreamSet[] | null,
+): [number, number, number][] | undefined {
+	if (!streamSets) {
+		return undefined;
+	}
+	let pos3D: [number, number, number][] | undefined;
+	const distanceStream = streamSets.find(
+		(item) => item.type === "latlng",
+	)?.data;
+	const altitudeStream = streamSets.find(
+		(item) => item.type === "altitude",
+	)?.data;
+	if (distanceStream && altitudeStream) {
+		pos3D = distanceStream.map((item, index) => [
+			item[0],
+			item[1],
+			altitudeStream[index],
+		]);
+	}
+	return pos3D;
+}
+
 export const StravaActivitiesService = {
 	/**
 	 * Loads detailed information about all activities for the authenticated athlete, decodes the polyline map data, categorizes the sport color, and returns as a list of objects.
@@ -29,7 +55,9 @@ export const StravaActivitiesService = {
 		stravaAuth: StravaAuth,
 		page: number,
 	): Promise<GetActivitiesResponse> => {
-		const stravaClient = new StravaAthleteProvider(stravaAuth.accessToken.code);
+		const stravaClient = new StravaAthleteProvider(
+			stravaAuth.accessToken.code,
+		);
 		const athleteId = stravaAuth.athlete.id;
 
 		// List all athlete activities
@@ -51,23 +79,35 @@ export const StravaActivitiesService = {
 				error,
 			};
 		}
-		const activityList = activityRes.map((activity) => {
-			return {
-				id: activity.id,
-				athleteId,
-				name: activity.name,
-				distance: activity.distance,
-				elapsedTime: activity.elapsed_time,
-				movingTime: activity.moving_time,
-				totalElevationGain: activity.total_elevation_gain,
-				sportType: activity.sport_type,
-				sportTypeColour: mapSportColor(activity.sport_type),
-				startDate: activity.start_date,
-				mapPolyline: activity.map?.summary_polyline,
-				gearId: activity.gear_id,
-				description: activity.description,
-			};
-		});
+
+		const activityList = await Promise.all(
+			activityRes.map(async (activity) => {
+				// Get activity stream
+				let latLngAlt;
+				if (!stravaClient.rateLimitExceeded()) {
+					const activityStream =
+						await stravaClient.activityPositionStream(activity.id);
+					latLngAlt = parseStreamResponse(activityStream);
+				}
+				// TODO Map stream elevation data?
+				return {
+					id: activity.id,
+					athleteId,
+					name: activity.name,
+					distance: activity.distance,
+					elapsedTime: activity.elapsed_time,
+					movingTime: activity.moving_time,
+					totalElevationGain: activity.total_elevation_gain,
+					sportType: activity.sport_type,
+					sportTypeColour: mapSportColor(activity.sport_type),
+					startDate: activity.start_date,
+					mapPolyline: activity.map?.summary_polyline,
+					gearId: activity.gear_id,
+					description: activity.description,
+					latLngAlt,
+				};
+			}),
+		);
 
 		return {
 			activities: activityList,
