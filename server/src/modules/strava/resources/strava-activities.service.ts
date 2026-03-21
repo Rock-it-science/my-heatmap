@@ -1,4 +1,4 @@
-import StravaApiV3 from "strava-v3";
+import StravaApi from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
 import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
 
@@ -28,19 +28,19 @@ export const StravaActivitiesService = {
 		stravaAuth: StravaAuth,
 		page: number,
 	): Promise<GetActivitiesResponse> => {
-		new StravaApiV3.client(stravaAuth.accessToken.code);
+		const stravaClient = new StravaApi.client(stravaAuth.accessToken.code);
 		const athleteId = stravaAuth.athlete.id;
 
 		// List all athlete activities
 		let activityRes: any[] | undefined;
 		let error: string = "";
 		try {
-			activityRes = await StravaApiV3.athlete.listActivities({ page });
+			activityRes = await stravaClient.athlete.listActivities({ page });
 		} catch (e) {
 			error = `Error listing activities for athlete ${athleteId}: ${e}`;
 			console.log(error);
 		}
-		const rateLimitExceeded = StravaApiV3.rateLimiting.exceeded();
+		const rateLimitExceeded = stravaClient.rateLimiting.exceeded();
 
 		// Early return if no data in response
 		if (!activityRes) {
