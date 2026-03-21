@@ -31,18 +31,20 @@ export const StravaAuthController = {
 			);
 
 			const expiresAtDate = new Date(response.expires_at * 1000);
-			request.session.set("stravaAuth", {
-				accessToken: {
-					code: response.access_token,
-					expiresAt: expiresAtDate,
-				},
-				refreshToken: {
-					code: response.refresh_token,
-				},
-				athlete: {
-					id: response.athlete.id,
-				},
-			});
+			if (response.athlete?.id) {
+				request.session.set("stravaAuth", {
+					accessToken: {
+						code: response.access_token,
+						expiresAt: expiresAtDate,
+					},
+					refreshToken: {
+						code: response.refresh_token,
+					},
+					athlete: {
+						id: response.athlete.id,
+					},
+				});
+			}
 			return reply.redirect(`${process.env.FRONTEND_URL}/heatmap`);
 		} catch (error) {
 			const errorMessage = `Error exchanging authorization code for Strava access token: ${error}`;
@@ -86,7 +88,7 @@ export const StravaAuthController = {
 			stravaAuth &&
 			stravaAuth.accessToken &&
 			new Date(stravaAuth.accessToken.expiresAt).getTime() >
-				new Date().getTime()
+			new Date().getTime()
 		) {
 			return reply.send({ isLoggedIn: true });
 		} else {

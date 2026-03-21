@@ -1,4 +1,4 @@
-import StravaApiV3, { DetailedActivityResponse } from "strava-v3";
+import StravaApiV3 from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
 import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
 
@@ -28,7 +28,7 @@ export const StravaActivitiesService = {
 		stravaAuth: StravaAuth,
 		page: number,
 	): Promise<GetActivitiesResponse> => {
-		StravaApiV3.client(stravaAuth.accessToken.code);
+		new StravaApiV3.client(stravaAuth.accessToken.code);
 		const athleteId = stravaAuth.athlete.id;
 
 		// List all athlete activities

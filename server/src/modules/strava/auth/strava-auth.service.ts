@@ -1,17 +1,13 @@
 import { StravaAuth } from "../../../types/strava.types";
-import {
-	StravaRefreshResponse,
-	StravaTokenResponse,
-} from "./strava-auth.types";
 import { STRAVA_TOKEN_STATUSES } from "./strava-auth.types";
-import strava from "strava-v3";
+import strava, { RefreshTokenResponse } from "strava-v3";
 
 /**
  * Authorize with Strava API and get refresh token
  */
 async function exchangeAuthCodeForToken(
 	authCode: string,
-): Promise<StravaTokenResponse> {
+): Promise<RefreshTokenResponse> {
 	if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
 		throw Error("Client ID or secret not set");
 	}
@@ -25,7 +21,7 @@ async function exchangeAuthCodeForToken(
 	} catch (error) {
 		throw Error(`Error setting Strava config: ${error.message}`);
 	}
-	const response: StravaTokenResponse = await strava.oauth.getToken(authCode);
+	const response: RefreshTokenResponse = await strava.oauth.getToken(authCode);
 	console.log("debug - received response from strava");
 	return response;
 }
@@ -35,7 +31,7 @@ async function exchangeAuthCodeForToken(
  */
 async function refreshExpiredAccessToken(
 	refreshToken: string,
-): Promise<StravaRefreshResponse> {
+): Promise<RefreshTokenResponse> {
 	if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
 		throw Error("Client ID or secret not set");
 	}
@@ -74,7 +70,7 @@ export const StravaAuthService = {
 	stravaAuthCallback: async (
 		stravaAuthCode: string,
 		stravaAuthScope: string,
-	): Promise<StravaTokenResponse> => {
+	): Promise<RefreshTokenResponse> => {
 		const tokenResponse = await exchangeAuthCodeForToken(stravaAuthCode);
 
 		return tokenResponse;
