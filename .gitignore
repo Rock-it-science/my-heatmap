@@ -12,11 +12,6 @@ node_modules/
 .env.local
 .env.*.local
 
-# IDE files
-.vscode/
-.idea/
-.cursor/
-
 # OS files
 .DS_Store
 Thumbs.db
