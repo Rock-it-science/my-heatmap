@@ -1,6 +1,7 @@
 import StravaApi from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
 import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
+import { StravaAthleteProvider } from "../../../providers/strava/StravaProviders";
 
 function mapSportColor(sportType: string): string {
 	// TODO Expand this
@@ -28,19 +29,19 @@ export const StravaActivitiesService = {
 		stravaAuth: StravaAuth,
 		page: number,
 	): Promise<GetActivitiesResponse> => {
-		const stravaClient = new StravaApi.client(stravaAuth.accessToken.code);
+		const stravaClient = new StravaAthleteProvider(stravaAuth.accessToken.code);
 		const athleteId = stravaAuth.athlete.id;
 
 		// List all athlete activities
 		let activityRes: any[] | undefined;
 		let error: string = "";
 		try {
-			activityRes = await stravaClient.athlete.listActivities({ page });
+			activityRes = await stravaClient.listActivities(page);
 		} catch (e) {
 			error = `Error listing activities for athlete ${athleteId}: ${e}`;
 			console.log(error);
 		}
-		const rateLimitExceeded = stravaClient.rateLimiting.exceeded();
+		const rateLimitExceeded = stravaClient.rateLimitExceeded();
 
 		// Early return if no data in response
 		if (!activityRes) {

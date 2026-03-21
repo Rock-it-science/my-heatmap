@@ -1,3 +1,4 @@
+import { StravaOAuthProvider } from "../../../providers/strava/StravaProviders";
 import { StravaAuth } from "../../../types/strava.types";
 import { STRAVA_TOKEN_STATUSES } from "./strava-auth.types";
 import strava, { RefreshTokenResponse } from "strava-v3";
@@ -11,18 +12,8 @@ async function exchangeAuthCodeForToken(
 	if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
 		throw Error("Client ID or secret not set");
 	}
-	try {
-		strava.config({
-			access_token: "not set yet",
-			client_id: process.env.STRAVA_CLIENT_ID,
-			client_secret: process.env.STRAVA_CLIENT_SECRET,
-			redirect_uri: "localhost",
-		});
-	} catch (error) {
-		throw Error(`Error setting Strava config: ${error.message}`);
-	}
-	const response: RefreshTokenResponse = await strava.oauth.getToken(authCode);
-	console.log("debug - received response from strava");
+	const stravaOAuthProvider = new StravaOAuthProvider();
+	const response = await stravaOAuthProvider.getToken(authCode);
 	return response;
 }
 
@@ -35,17 +26,8 @@ async function refreshExpiredAccessToken(
 	if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
 		throw Error("Client ID or secret not set");
 	}
-	try {
-		strava.config({
-			access_token: "not set yet",
-			client_id: process.env.STRAVA_CLIENT_ID,
-			client_secret: process.env.STRAVA_CLIENT_SECRET,
-			redirect_uri: "localhost",
-		});
-	} catch (error) {
-		throw Error(`Error setting Strava config: ${error.message}`);
-	}
-	const response = await strava.oauth.refreshToken(refreshToken);
+	const stravaOAuthProvider = new StravaOAuthProvider();
+	const response = await stravaOAuthProvider.refreshToken(refreshToken);
 	return response;
 }
 
