@@ -3,6 +3,7 @@ import strava, {
 	StravaClientInstance,
 	SummaryActivity,
 } from "strava-v3";
+import { StravaAuth } from "../../types/strava.types";
 
 const STRAVA_CONFIG = {
 	access_token: "not set yet",
@@ -38,9 +39,11 @@ export class StravaOAuthProvider {
 
 export class StravaAthleteProvider {
 	private client: StravaClientInstance;
+	public athleteId: number;
 
-	constructor(accessToken: string) {
-		this.client = new strava.client(accessToken);
+	constructor(stravaAuth: StravaAuth) {
+		this.client = new strava.client(stravaAuth.accessToken.code);
+		this.athleteId = stravaAuth.athlete.id;
 	}
 
 	async listActivities(page: number): Promise<SummaryActivity[]> {

@@ -1,7 +1,10 @@
 import StravaApi, { StreamSet } from "strava-v3";
 import { StravaAuth } from "../../../types/strava.types";
 import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
-import { StravaAthleteProvider } from "../../../providers/strava/StravaProviders";
+import {
+	StravaAthleteProvider,
+	StravaOAuthProvider,
+} from "../../../providers/strava/StravaProviders";
 
 function mapSportColor(sportType: string): string {
 	// TODO Expand this
@@ -45,31 +48,28 @@ function parseStreamResponse(
 	return pos3D;
 }
 
-export const StravaActivitiesService = {
+export class StravaActivitiesService {
+	constructor(private stravaAthleteProvider: StravaAthleteProvider) {}
+
 	/**
 	 * Loads detailed information about all activities for the authenticated athlete, decodes the polyline map data, categorizes the sport color, and returns as a list of objects.
 	 * @param accessToken
 	 * @returns list of detailed activities
 	 */
-	getActivities: async (
-		stravaAuth: StravaAuth,
-		page: number,
-	): Promise<GetActivitiesResponse> => {
-		const stravaClient = new StravaAthleteProvider(
-			stravaAuth.accessToken.code,
-		);
-		const athleteId = stravaAuth.athlete.id;
+	async getActivities(page: number): Promise<GetActivitiesResponse> {
+		const athleteId = this.stravaAthleteProvider.athleteId;
 
 		// List all athlete activities
 		let activityRes: any[] | undefined;
 		let error: string = "";
 		try {
-			activityRes = await stravaClient.listActivities(page);
+			activityRes = await this.stravaAthleteProvider.listActivities(page);
 		} catch (e) {
 			error = `Error listing activities for athlete ${athleteId}: ${e}`;
 			console.log(error);
 		}
-		const rateLimitExceeded = stravaClient.rateLimitExceeded();
+		const rateLimitExceeded =
+			this.stravaAthleteProvider.rateLimitExceeded();
 
 		// Early return if no data in response
 		if (!activityRes) {
@@ -84,9 +84,11 @@ export const StravaActivitiesService = {
 			activityRes.map(async (activity) => {
 				// Get activity stream
 				let latLngAlt;
-				if (!stravaClient.rateLimitExceeded()) {
+				if (!this.stravaAthleteProvider.rateLimitExceeded()) {
 					const activityStream =
-						await stravaClient.activityPositionStream(activity.id);
+						await this.stravaAthleteProvider.activityPositionStream(
+							activity.id,
+						);
 					latLngAlt = parseStreamResponse(activityStream);
 				}
 				// TODO Map stream elevation data?
@@ -114,5 +116,5 @@ export const StravaActivitiesService = {
 			rateLimitExceeded,
 			error,
 		};
-	},
-};
+	}
+}
