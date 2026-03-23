@@ -28,7 +28,6 @@
 		"fastify": "^5.6.1",
 		"node": "^24.11.0",
 		"strava-v3": "^4.0.1",
-		"ts-jest": "^29.4.6",
 		"typescript": "^5.9.3"
 	},
 	"devDependencies": {
@@ -36,6 +35,7 @@
 		"@types/mapbox__polyline": "^1.0.5",
 		"jest": "^30.3.0",
 		"prisma": "^6.19.0",
+		"ts-jest": "^29.4.6",
 		"ts-node-dev": "^2.0.0"
 	}
 }

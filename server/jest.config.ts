@@ -4,6 +4,10 @@ const config: Config.InitialOptions = {
 	preset: "ts-jest",
 	testEnvironment: "node",
 	roots: ["<rootDir>/src"],
+	moduleDirectories: ["node_modules", "<rootDir>/../node_modules"],
+	transform: {
+		"^.+\\.ts$": "ts-jest",
+	},
 	testMatch: ["**/?(*.)+(spec|test).ts"],
 	collectCoverageFrom: [
 		"src/**/*.ts",
