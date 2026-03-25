@@ -9,6 +9,10 @@ import {
 	GetActivitiesParams,
 	GetActivitiesSchema,
 } from "../../shared/schemas/strava-activities.schema";
+import {
+	GetActivity3dPositionsParams,
+	GetActivity3dPositionsSchema,
+} from "../../shared";
 
 dotenv.config();
 const server = fastify({
@@ -46,6 +50,16 @@ server.get("/api/activities", {
 		},
 	},
 	handler: StravaActivitiesController.getActivities,
+});
+
+server.get("/api/activity-3d-positions", {
+	schema: {
+		querystring: GetActivity3dPositionsParams,
+		response: {
+			200: GetActivity3dPositionsSchema,
+		},
+	},
+	handler: StravaActivitiesController.getActivity3dPositions,
 });
 
 async function startServer() {

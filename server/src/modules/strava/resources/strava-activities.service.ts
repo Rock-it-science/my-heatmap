@@ -1,9 +1,12 @@
-import StravaApi, { StreamSet } from "strava-v3";
-import { StravaAuth } from "../../../types/strava.types";
-import { GetActivitiesResponse } from "../../../../../shared/schemas/strava-activities.schema";
+import {
+	Activity3dPositions,
+	GetActivitiesResponse,
+	GetActivity3dPositionsResponse,
+} from "../../../../../shared";
 import {
 	StravaAthleteProvider,
-	StravaOAuthProvider,
+	StreamSetAltitudeDistance,
+	StreamSetLatLngDistance,
 } from "../../../providers/strava/StravaProviders";
 
 function mapSportColor(sportType: string): string {
@@ -11,9 +14,9 @@ function mapSportColor(sportType: string): string {
 	switch (sportType) {
 		case "Ride":
 			return "#FA8334";
-		case "Gravel Ride":
+		case "GravelRide":
 			return "#fffd77";
-		case "Mountain Bike Ride":
+		case "MountainBikeRide":
 			return "#388697";
 		case "Hike":
 			return "#271033";
@@ -23,27 +26,47 @@ function mapSportColor(sportType: string): string {
 }
 
 /**
- * Take stream response and parse it into a list of 3D coordinates (lat, lng, altitude)
+ * Parse stream response objects, and zip into a single output of 3D positions (latitude, longitude, altitude)
+ * Assumptions:
+ *  - Both inputs are truthy and have no missing data
+ *  - All data attributes are of identical length, and correspond to the same distances
+ *  - Distance values are sorted in ascending order (same as chronological order points were created)
+ * @param activityAltitudeStream Activity stream of altitude for each distance position in the activity (altitude over distance)
+ * @param activityPositionStream Activity stream of latitude and longitude positions for each distance position in the activity (lat/long over distance)
+ * @returns List of 3D positions as [Latitude, Longitude, Altitude]
  */
-function parseStreamResponse(
-	streamSets: StreamSet[] | null,
-): [number, number, number][] | undefined {
-	if (!streamSets) {
-		return undefined;
+export function parseStreamResponse(
+	activityAltitudeStream: StreamSetAltitudeDistance,
+	activityPositionStream: StreamSetLatLngDistance,
+): Activity3dPositions | undefined {
+	// Both stream inputs should be truthy and all data should be the same length
+	if (!activityAltitudeStream || !activityPositionStream) {
+		throw new Error("parseStreamResponse inputs cannot be nullish");
 	}
-	let pos3D: [number, number, number][] | undefined;
-	const distanceStream = streamSets.find(
-		(item) => item.type === "latlng",
-	)?.data;
-	const altitudeStream = streamSets.find(
-		(item) => item.type === "altitude",
-	)?.data;
+
+	if (
+		activityPositionStream.distance.data.length !==
+			activityAltitudeStream.distance.data.length ||
+		activityAltitudeStream.altitude.data.length !==
+			activityPositionStream.latlng.data.length
+	) {
+		throw new Error(
+			"parseStreamResponse input data arguments must be identical length",
+		);
+	}
+
+	// Assume data is already sorted by distance, and sets are the same size - therefore can simply join by index (zip)
+	let pos3D: Activity3dPositions | undefined;
+	const distanceStream = activityPositionStream.distance.data;
+	const positionStream = activityPositionStream.latlng.data;
+	const altitudeStream = activityAltitudeStream.altitude.data;
 	if (distanceStream && altitudeStream) {
-		pos3D = distanceStream.map((item, index) => [
-			item[0],
-			item[1],
-			altitudeStream[index],
-		]);
+		pos3D = positionStream.map((item, index) => ({
+			distance: distanceStream[index],
+			latitude: item[0],
+			longitude: item[1],
+			altitude: altitudeStream[index],
+		}));
 	}
 	return pos3D;
 }
@@ -80,18 +103,9 @@ export class StravaActivitiesService {
 			};
 		}
 
+		activityRes = activityRes;
 		const activityList = await Promise.all(
 			activityRes.map(async (activity) => {
-				// Get activity stream
-				let latLngAlt;
-				if (!this.stravaAthleteProvider.rateLimitExceeded()) {
-					const activityStream =
-						await this.stravaAthleteProvider.activityPositionStream(
-							activity.id,
-						);
-					latLngAlt = parseStreamResponse(activityStream);
-				}
-				// TODO Map stream elevation data?
 				return {
 					id: activity.id,
 					athleteId,
@@ -106,7 +120,6 @@ export class StravaActivitiesService {
 					mapPolyline: activity.map?.summary_polyline,
 					gearId: activity.gear_id,
 					description: activity.description,
-					latLngAlt,
 				};
 			}),
 		);
@@ -116,5 +129,44 @@ export class StravaActivitiesService {
 			rateLimitExceeded,
 			error,
 		};
+	}
+
+	async getActivity3dPositions(
+		activityId: string,
+	): Promise<GetActivity3dPositionsResponse> {
+		// Get activity stream
+		let latLngAlt;
+		let error;
+		if (!this.stravaAthleteProvider.rateLimitExceeded()) {
+			try {
+				const activityAltitudeStream =
+					await this.stravaAthleteProvider.activityAltitudeStream(
+						activityId,
+					);
+				const activityPositionStream =
+					await this.stravaAthleteProvider.activityPositionStream(
+						activityId,
+					);
+				latLngAlt = parseStreamResponse(
+					activityAltitudeStream,
+					activityPositionStream,
+				);
+			} catch (e) {
+				error = e;
+			}
+		}
+		if (latLngAlt) {
+			return {
+				activity3dPositions: latLngAlt,
+				rateLimitExceeded:
+					this.stravaAthleteProvider.rateLimitExceeded(),
+			};
+		} else {
+			return {
+				rateLimitExceeded:
+					this.stravaAthleteProvider.rateLimitExceeded(),
+				error,
+			};
+		}
 	}
 }

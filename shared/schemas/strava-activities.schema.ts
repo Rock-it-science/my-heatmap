@@ -23,7 +23,7 @@ export const GetActivitiesSchema = Type.Object({
 		}),
 	),
 	rateLimitExceeded: Type.Boolean(),
-	error: Type.String(),
+	error: Type.Optional(Type.String()),
 });
 
 /**
