@@ -115,6 +115,7 @@ export function MapApp() {
 	const [sportTypeEnabled, setSportTypeEnabled] = useState<
 		Record<string, boolean>
 	>({});
+	const [activityLineOpacity, setActivityLineOpacity] = useState<number>(0.2);
 
 	/** Activity geo data */
 	const [activityPolyLines, setActivityPolyLines] = useState<
@@ -218,8 +219,10 @@ export function MapApp() {
 
 		const heatLayer = createHeatLayer(activityPolyLines);
 
-		const activityLinesLayer =
-			createActivityLinesLayerGroup(activityPolyLines);
+		const activityLinesLayer = createActivityLinesLayerGroup(
+			activityPolyLines,
+			activityLineOpacity,
+		);
 
 		// Update refs and state with new layers
 		heatmapLayerRef.current = heatLayer;
@@ -243,10 +246,11 @@ export function MapApp() {
 		});
 	}
 
-	function updateActivityLinesOpacity(value: number) {
-		activityLinesLayerRef.current?.eachLayer(
-			(layer: L.Layer) =>
-				((layer.options as L.PolylineOptions).opacity = value),
+	function updateActivityLinesOpacity(valuePerc: number) {
+		const value = valuePerc / 100;
+		setActivityLineOpacity(value);
+		activityLinesLayerRef.current?.eachLayer((layer: L.Layer) =>
+			(layer as L.Polyline).setStyle({ opacity: activityLineOpacity }),
 		);
 	}
 
@@ -254,9 +258,6 @@ export function MapApp() {
 		filterStartPercent: number,
 		filterEndPercent: number,
 	) {
-		console.log(
-			`Updating activity lines date range to values: ${filterStartPercent}, ${filterEndPercent}`,
-		);
 		if (
 			!activityDateRange ||
 			!map ||
@@ -290,7 +291,7 @@ export function MapApp() {
 				activityDateMS <= filterEndMS
 			) {
 				// Activity in filter range
-				enableActivityLineLayer(layer as any);
+				enableActivityLineLayer(layer as any, activityLineOpacity);
 			} else {
 				// Activity out of filter range
 				disableActivityLineLayer(layer as any);
@@ -334,7 +335,9 @@ export function MapApp() {
 				};
 				if (polylineLayer.sportType === sportType) {
 					polylineLayer.setStyle({
-						opacity: sportTypeEnabled[sportType] ? 0 : 1,
+						opacity: sportTypeEnabled[sportType]
+							? 0
+							: activityLineOpacity,
 					});
 				}
 			});

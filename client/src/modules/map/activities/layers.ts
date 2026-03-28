@@ -27,13 +27,14 @@ export function createHeatLayer(activityPolyLines: StravaActivity[]) {
 
 export function createActivityLinesLayerGroup(
 	activityPolyLines: StravaActivity[],
+	activityLineOpacity: number,
 ): L.LayerGroup<ActivityLayer> {
 	const activityLineLayers = activityPolyLines.map((activityPolyline) => {
 		const activityLineLayer: any = L.polyline(
 			activityPolyline.polylinePoints,
 			{
 				color: activityPolyline.sportTypeColour,
-				opacity: DEFAULT_OPACITY,
+				opacity: activityLineOpacity,
 			},
 		);
 		activityLineLayer.sportType = activityPolyline.sportType;
@@ -58,7 +59,10 @@ export function createActivityLinesLayerGroup(
  * Set activity line event listeners to raise opacity and weight of lines when they are hovered over, or when popup is open.
  * Mouse-out should not clear changes if popup is open (activity line should stay boldened as long as popup is open)
  */
-function setActivityLineEvents(activityLineLayer: ActivityLayer): void {
+function setActivityLineEvents(
+	activityLineLayer: ActivityLayer,
+	activityLineOpacity: number = DEFAULT_OPACITY,
+): void {
 	let isPopupOpen = false;
 	activityLineLayer.on("popupopen", (ev) => {
 		isPopupOpen = true;
@@ -68,7 +72,7 @@ function setActivityLineEvents(activityLineLayer: ActivityLayer): void {
 		isPopupOpen = false;
 		(ev.target as L.Polyline).setStyle({
 			weight: 3,
-			opacity: DEFAULT_OPACITY,
+			opacity: activityLineOpacity,
 		});
 	});
 
@@ -80,7 +84,7 @@ function setActivityLineEvents(activityLineLayer: ActivityLayer): void {
 		if (!isPopupOpen)
 			(ev.target as L.Polyline).setStyle({
 				weight: 3,
-				opacity: DEFAULT_OPACITY,
+				opacity: activityLineOpacity,
 			});
 	});
 	return;
@@ -112,9 +116,10 @@ export function disableActivityLineLayer(
  */
 export function enableActivityLineLayer(
 	activityLineLayer: ActivityLayer,
+	activityLineOpacity: number = DEFAULT_OPACITY,
 ): void {
 	activityLineLayer.setStyle({
-		opacity: 1,
+		opacity: activityLineOpacity,
 		interactive: true,
 	});
 
