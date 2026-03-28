@@ -22,6 +22,7 @@ function MenuBar() {
 			height="60px"
 			gap="50px"
 			backgroundColor="var(--dark-gray)"
+			zIndex={400}
 		>
 			<Link href="/">
 				<Image

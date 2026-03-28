@@ -72,9 +72,9 @@ function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {
 }
 
 /** Returns the popup component as an HTML Element */
-export function createActivityPopup(activity: StravaActivity): HTMLElement {
+export function createActivityPopup(activityId: string): HTMLElement {
 	const popupContainer = document.createElement("div");
 	const root = createRoot(popupContainer);
-	root.render(<ActivityPopup activityId={activity.id.toString()} />);
+	root.render(<ActivityPopup activityId={activityId} />);
 	return popupContainer;
 }

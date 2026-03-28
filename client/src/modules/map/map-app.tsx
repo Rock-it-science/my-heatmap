@@ -7,20 +7,85 @@ import {
 	Fieldset,
 	HStack,
 	Slider,
-	Loader,
-	Spinner,
-	Dialog,
 } from "@chakra-ui/react";
 import L from "./leaflet-setup";
 import { FaCircle } from "react-icons/fa";
-import { initMap } from "./map";
 import {
 	createActivityLinesLayerGroup,
 	createHeatLayer,
+	disableActivityLineLayer,
+	enableActivityLineLayer,
 } from "./activities/layers";
 import { fetchStravaActivities } from "../api/strava-api";
 import { StravaActivity } from "shared/index";
 import { SpinnerDialog } from "@/components/SpinnerDialog";
+import { ChartData, ChartOptions } from "chart.js";
+import { MapContainer, TileLayer } from "react-leaflet";
+import {
+	Chart as ChartJS,
+	CategoryScale,
+	LinearScale,
+	BarElement,
+	Title,
+	Tooltip,
+	Legend,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	BarElement,
+	Title,
+	Tooltip,
+	Legend,
+);
+
+/** Activity Chart config */
+const chartOptions: ChartOptions<"bar"> = {
+	responsive: true,
+	maintainAspectRatio: false,
+	scales: {
+		x: {
+			grid: {
+				display: false,
+			},
+			ticks: {
+				display: false,
+			},
+		},
+		y: {
+			grid: {
+				display: false,
+			},
+			ticks: {
+				display: false,
+			},
+		},
+	},
+	plugins: {
+		// tooltip: {
+		// 	enabled: false,
+		// },
+		legend: {
+			display: false,
+		},
+	},
+};
+const chartDataEmptyState: ChartData<"bar"> = {
+	labels: undefined,
+	datasets: [
+		{
+			label: undefined,
+			data: [],
+		},
+	],
+};
+
+const zIndexMap = {
+	map: 100,
+	overlay: 200,
+};
 
 export function MapApp() {
 	const [loading, setLoading] = useState(true);
@@ -30,11 +95,15 @@ export function MapApp() {
 	const mapContainerRef = useRef<HTMLDivElement>(null);
 
 	/** The map DOM element */
-	const mapRef = useRef<L.Map>(undefined);
+	const [map, setMap] = useState<L.Map | null>(null);
 
 	/** Refs for control overlays to prevent map interactions */
 	const mapControlsRef = useRef<HTMLDivElement>(null);
 	const mapLegendRef = useRef<HTMLDivElement>(null);
+
+	/** Activity Histogram Chart Data */
+	const [chartData, setChartData] =
+		useState<ChartData<"bar">>(chartDataEmptyState);
 
 	// Layer controls
 	// TODO - if adding more layers, consider using a data structure to manage these variables
@@ -54,6 +123,9 @@ export function MapApp() {
 	const [activityColorMap, setActivityColorMap] = useState<
 		{ sportType: string; sportTypeFormatted: string; color: string }[]
 	>([]);
+	const [activityDateRange, setActivityDateRange] = useState<
+		[Date, Date] | null
+	>(null);
 
 	// Fetch activity data
 	useEffect(() => {
@@ -101,31 +173,47 @@ export function MapApp() {
 				tempActivityColorMap.map((map) => [map.sportType, true]),
 			);
 			setSportTypeEnabled(sportTypeRecord);
+
+			// Initialize chart data from activity data
+			//		Create count of data that occured in each month
+			const sortedActivityDates = activityPolyLines
+				.map((activity) => new Date(activity.startDate))
+				.sort((a, b) => a.getTime() - b.getTime());
+			setActivityDateRange([
+				sortedActivityDates[0],
+				sortedActivityDates[sortedActivityDates.length - 1],
+			]);
+			let activityMonths: string[] = [];
+			sortedActivityDates.map((activityDate) => {
+				const activityMonthString = activityDate.toLocaleDateString(
+					undefined,
+					{ year: "numeric", month: "long" },
+				);
+				activityMonths.push(activityMonthString);
+			});
+			const monthCounts = activityMonths.reduce(
+				(acc: { [key: string]: number }, item: string) => {
+					acc[item] = (acc[item] || 0) + 1;
+					return acc;
+				},
+				{},
+			);
+			setChartData({
+				labels: Object.keys(monthCounts),
+				datasets: [
+					{
+						label: "Activity Month",
+						data: Object.values(monthCounts),
+						backgroundColor: "rgba(77, 166, 255, 0.7)",
+					},
+				],
+			});
 		}
 	}, [activityPolyLines]);
 
-	// Initialize the map - should only happen once, and should wait for mapref to be defined
-	useEffect(() => {
-		if (!mapContainerRef.current || mapRef.current) return;
-
-		initMap(mapRef);
-
-		// Cleanup function
-		return () => {
-			if (mapRef.current) {
-				mapRef.current.remove();
-				mapRef.current = undefined;
-			}
-		};
-	}, [mapContainerRef, mapRef]);
-
 	// Create layers
 	useEffect(() => {
-		if (
-			!mapRef.current ||
-			!activityPolyLines ||
-			activityPolyLines?.length === 0
-		)
+		if (!map || !activityPolyLines || activityPolyLines?.length === 0)
 			return;
 
 		const heatLayer = createHeatLayer(activityPolyLines);
@@ -138,7 +226,7 @@ export function MapApp() {
 		activityLinesLayerRef.current = activityLinesLayer;
 
 		// Add activity lines layer by default
-		activityLinesLayer.addTo(mapRef.current);
+		activityLinesLayer.addTo(map);
 		setHeatmapLayerEnabled(false);
 		setActivityLinesLayerEnabled(true);
 
@@ -148,42 +236,90 @@ export function MapApp() {
 		};
 	}, [activityPolyLines]);
 
-	const updateHeatmapPointRadius = (value: number) => {
+	function updateHeatmapPointRadius(value: number) {
 		heatmapLayerRef.current?.setOptions({
 			...heatmapLayerRef.current.options,
 			radius: value,
 		});
-	};
+	}
 
-	const updateActivityLinesOpacity = (value: number) => {
+	function updateActivityLinesOpacity(value: number) {
 		activityLinesLayerRef.current?.eachLayer(
 			(layer: L.Layer) =>
 				((layer.options as L.PolylineOptions).opacity = value),
 		);
-	};
+	}
+
+	function updateActivityLinesDateRange(
+		filterStartPercent: number,
+		filterEndPercent: number,
+	) {
+		console.log(
+			`Updating activity lines date range to values: ${filterStartPercent}, ${filterEndPercent}`,
+		);
+		if (
+			!activityDateRange ||
+			!map ||
+			!activityLinesLayerRef ||
+			!activityLinesLayerRef.current
+		) {
+			return;
+		}
+
+		const activityDateRangeStartMS = activityDateRange[0].valueOf();
+		const activityDateRangeDiffMS =
+			activityDateRange[1].valueOf() - activityDateRangeStartMS;
+
+		// given start and end percentage in range, need to find start and end date to use for filter
+		// have date range of activities, calculate what date would be at X% between those numbers
+
+		const filterStartRatioMS =
+			activityDateRangeDiffMS * (filterStartPercent / 100);
+		const filterEndRatioMS =
+			activityDateRangeDiffMS * (filterEndPercent / 100);
+
+		// Calculate actual filter thresholds in MS by adding start date
+		const filterStartMS = activityDateRangeStartMS + filterStartRatioMS;
+		const filterEndMS = activityDateRangeStartMS + filterEndRatioMS;
+
+		// For each layer, enable if in range, and disable if not in range
+		activityLinesLayerRef.current?.eachLayer((layer: L.Layer) => {
+			const activityDateMS = new Date((layer as any).startDate).valueOf();
+			if (
+				activityDateMS >= filterStartMS &&
+				activityDateMS <= filterEndMS
+			) {
+				// Activity in filter range
+				enableActivityLineLayer(layer as any);
+			} else {
+				// Activity out of filter range
+				disableActivityLineLayer(layer as any);
+			}
+		});
+	}
 
 	/**
 	 * Mapping of callback functions to toggle layer visibility from the map
 	 */
 	const toggleLayer = {
 		heatmap: () => {
-			if (mapRef.current && heatmapLayerRef.current) {
+			if (map && heatmapLayerRef.current) {
 				if (heatmapLayerEnabled) {
-					heatmapLayerRef.current.removeFrom(mapRef.current);
+					heatmapLayerRef.current.removeFrom(map);
 					setHeatmapLayerEnabled(false);
 				} else {
-					heatmapLayerRef.current.addTo(mapRef.current);
+					heatmapLayerRef.current.addTo(map);
 					setHeatmapLayerEnabled(true);
 				}
 			}
 		},
 		activityLines: () => {
-			if (mapRef.current && activityLinesLayerRef.current) {
+			if (map && activityLinesLayerRef.current) {
 				if (activityLinesLayerEnabled) {
-					activityLinesLayerRef.current.removeFrom(mapRef.current);
+					activityLinesLayerRef.current.removeFrom(map);
 					setActivityLinesLayerEnabled(false);
 				} else {
-					activityLinesLayerRef.current.addTo(mapRef.current);
+					activityLinesLayerRef.current.addTo(map);
 					setActivityLinesLayerEnabled(true);
 				}
 			}
@@ -210,14 +346,14 @@ export function MapApp() {
 	};
 
 	return (
-		<Box id="map">
+		<Box id="map-page-root">
 			<Text
 				id="error-text"
 				hidden={!error}
 				padding="8px"
 				color="red"
 				background="white"
-				zIndex="900"
+				zIndex={zIndexMap.overlay}
 				position="absolute"
 				left={0}
 				bottom={0}
@@ -226,18 +362,29 @@ export function MapApp() {
 				{error}
 			</Text>
 			<SpinnerDialog loading={loading} />
-			<Box
-				ref={mapContainerRef}
-				id="map"
-				style={{ height: "calc(100vh - 60px)", width: "100%" }}
-			>
+			<Box ref={mapContainerRef} id="map-container">
+				<MapContainer
+					ref={setMap}
+					center={[50.875, -114.045]} // TODO Make this dynamic based on min/max values of user's activities
+					zoom={13}
+					style={{
+						height: "calc(100vh - 60px)",
+						width: "100%",
+						zIndex: zIndexMap.map,
+					}}
+				>
+					<TileLayer
+						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+						url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+					/>
+				</MapContainer>
 				<Box
 					ref={mapControlsRef}
 					id="map-controls"
-					zIndex="500"
+					zIndex={zIndexMap.overlay}
 					position="absolute"
 					right="0"
-					top="0"
+					top="60px"
 					padding="8px"
 					width="192px"
 					marginRight="0"
@@ -309,7 +456,7 @@ export function MapApp() {
 				<Box
 					ref={mapLegendRef}
 					id="map-legend"
-					zIndex="max"
+					zIndex={zIndexMap.overlay}
 					position="absolute"
 					right="0"
 					bottom="0"
@@ -342,6 +489,36 @@ export function MapApp() {
 						</HStack>
 					))}
 				</Box>
+			</Box>
+			<Box
+				position="absolute"
+				bottom="0"
+				paddingLeft="20px"
+				height="100px"
+				width="calc(100vh - 176px)"
+			>
+				<Bar
+					options={chartOptions}
+					data={chartData}
+					style={{
+						zIndex: zIndexMap.overlay,
+						position: "absolute",
+					}}
+				/>
+				<Slider.Root
+					defaultValue={[0, 100]}
+					zIndex={zIndexMap.overlay}
+					onValueChange={(d) =>
+						updateActivityLinesDateRange(d.value[0], d.value[1])
+					}
+				>
+					<Slider.Control>
+						<Slider.Track>
+							<Slider.Range />
+						</Slider.Track>
+						<Slider.Thumbs />
+					</Slider.Control>
+				</Slider.Root>
 			</Box>
 		</Box>
 	);
