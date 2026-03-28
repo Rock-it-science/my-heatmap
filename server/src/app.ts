@@ -1,6 +1,7 @@
-import { fastify } from "fastify";
+import { fastify, FastifyInstance } from "fastify";
 import { fastifySecureSession } from "@fastify/secure-session";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { StravaActivitiesController } from "./modules/strava/resources/strava-activities.controller";
 import { StravaAuthController } from "./modules/strava/auth/strava-auth.controller";
@@ -15,64 +16,80 @@ import {
 } from "../../shared";
 
 dotenv.config();
-const server = fastify({
-	trustProxy: true,
-}).withTypeProvider<TypeBoxTypeProvider>();
-
-server.register(fastifySecureSession, {
-	cookieName: "__session",
-	key: Buffer.from(process.env.SESSION_SECRET as string, "hex"),
-	cookie: {
-		path: "/",
-		httpOnly: true,
-		secure: true,
-		sameSite: "none",
-	},
-});
-server.register(cors, {
-	origin: process.env.FRONTEND_URL,
-	methods: ["GET"],
-	allowedHeaders: ["Content-Type", "Authorization"],
-	credentials: true,
-});
-
-/* Routes */
-server.get("/api/auth", StravaAuthController.stravaAuthRedirect);
-server.get("/api/auth/callback", StravaAuthController.stravaAuthCallback);
-server.get("/api/auth/refresh", StravaAuthController.refreshAuth);
-server.get("/api/auth/status", StravaAuthController.status);
-
-server.get("/api/activities", {
-	schema: {
-		querystring: GetActivitiesParams,
-		response: {
-			200: GetActivitiesSchema,
-		},
-	},
-	handler: StravaActivitiesController.getActivities,
-});
-
-server.get("/api/activity-3d-positions", {
-	schema: {
-		querystring: GetActivity3dPositionsParams,
-		response: {
-			200: GetActivity3dPositionsSchema,
-		},
-	},
-	handler: StravaActivitiesController.getActivity3dPositions,
-});
 
 async function startServer() {
 	try {
+		const server = await createServer();
+		routeRegistration(server);
 		const address = await server.listen({ port: 8085, host: "0.0.0.0" });
 		console.log(`Server listening at ${address}`);
+
+		process.on("SIGINT", () => gracefulShutdown(server, "SIGINT"));
+		process.on("SIGTERM", () => gracefulShutdown(server, "SIGTERM"));
 	} catch (err) {
 		console.error("Failed to start server:", err);
 		process.exit(1);
 	}
 }
 
-async function gracefulShutdown(signal: string) {
+async function createServer() {
+	const server = fastify({
+		trustProxy: true,
+	}).withTypeProvider<TypeBoxTypeProvider>();
+
+	server.register(fastifySecureSession, {
+		cookieName: "__session",
+		key: Buffer.from(process.env.SESSION_SECRET as string, "hex"),
+		cookie: {
+			path: "/",
+			httpOnly: true,
+			secure: true,
+			sameSite: "none",
+		},
+	});
+	server.register(cors, {
+		origin: process.env.FRONTEND_URL,
+		methods: ["GET"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+		credentials: true,
+	});
+
+	server.register(rateLimit, {
+		max: 50,
+		timeWindow: "1 minute",
+	});
+
+	return server;
+}
+
+function routeRegistration(server: FastifyInstance) {
+	server.get("/api/auth", StravaAuthController.stravaAuthRedirect);
+	server.get("/api/auth/callback", StravaAuthController.stravaAuthCallback);
+	server.get("/api/auth/refresh", StravaAuthController.refreshAuth);
+	server.get("/api/auth/status", StravaAuthController.status);
+
+	server.get("/api/activities", {
+		schema: {
+			querystring: GetActivitiesParams,
+			response: {
+				200: GetActivitiesSchema,
+			},
+		},
+		handler: StravaActivitiesController.getActivities,
+	});
+
+	server.get("/api/activity-3d-positions", {
+		schema: {
+			querystring: GetActivity3dPositionsParams,
+			response: {
+				200: GetActivity3dPositionsSchema,
+			},
+		},
+		handler: StravaActivitiesController.getActivity3dPositions,
+	});
+}
+
+async function gracefulShutdown(server: FastifyInstance, signal: string) {
 	console.log(`Received ${signal}. Gracefully shutting down...`);
 
 	try {
@@ -84,8 +101,5 @@ async function gracefulShutdown(signal: string) {
 		process.exit(1);
 	}
 }
-
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 startServer();
