@@ -7,6 +7,7 @@ const DEFAULT_OPACITY = 0.2;
 interface ActivityLayer extends L.Polyline {
 	activityId: string;
 	sportType: string;
+	sportTypeColour: string;
 	startDate: string;
 }
 
@@ -38,12 +39,13 @@ export function createActivityLinesLayerGroup(
 			},
 		);
 		activityLineLayer.sportType = activityPolyline.sportType;
+		activityLineLayer.sportTypeColour = activityPolyline.sportTypeColour;
 		activityLineLayer.startDate = activityPolyline.startDate;
 		activityLineLayer.activityId = activityPolyline.id;
 		activityLineLayer.bindPopup(
 			() => createActivityPopup(activityPolyline.id),
 			{
-				minWidth: 200,
+				minWidth: 300,
 			},
 		);
 
@@ -66,13 +68,18 @@ function setActivityLineEvents(
 	let isPopupOpen = false;
 	activityLineLayer.on("popupopen", (ev) => {
 		isPopupOpen = true;
-		(ev.target as L.Polyline).setStyle({ weight: 6, opacity: 1 });
+		(ev.target as L.Polyline).setStyle({
+			weight: 6,
+			opacity: 1,
+			color: "red",
+		});
 	});
 	activityLineLayer.on("popupclose", (ev) => {
 		isPopupOpen = false;
 		(ev.target as L.Polyline).setStyle({
 			weight: 3,
 			opacity: activityLineOpacity,
+			color: activityLineLayer.sportTypeColour,
 		});
 	});
 
@@ -126,7 +133,7 @@ export function enableActivityLineLayer(
 	activityLineLayer.bindPopup(
 		() => createActivityPopup(activityLineLayer.activityId),
 		{
-			minWidth: 200,
+			minWidth: 300,
 		},
 	);
 	setActivityLineEvents(activityLineLayer);

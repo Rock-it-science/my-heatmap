@@ -42,7 +42,7 @@ function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {
 		<ChakraProvider value={defaultSystem}>
 			{loading && <Spinner />}
 			{activityDetails && (
-				<VStack width="200px">
+				<VStack width="300px">
 					<Text textStyle="lg">{activityDetails.name}</Text>
 					<Table.Root showColumnBorder={false} variant="outline">
 						<Table.Body>
@@ -56,6 +56,18 @@ function ActivityPopup({ activityId }: { activityId: string }): JSX.Element {
 								<Table.Cell>Total Elevation Gain</Table.Cell>
 								<Table.Cell>
 									{activityDetails.totalElevationGain}m
+								</Table.Cell>
+							</Table.Row>
+							<Table.Row>
+								<Table.Cell>Activity Date</Table.Cell>
+								<Table.Cell>
+									{new Date(
+										activityDetails.startDate,
+									).toLocaleDateString(undefined, {
+										year: "numeric",
+										month: "long",
+										day: "2-digit",
+									})}
 								</Table.Cell>
 							</Table.Row>
 						</Table.Body>
