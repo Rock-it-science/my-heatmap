@@ -498,7 +498,7 @@ export function MapApp() {
 				bottom="0"
 				paddingLeft="20px"
 				height="100px"
-				width="calc(100vh - 176px)"
+				width="calc(100vw - 200px)"
 			>
 				<Bar
 					options={chartOptions}
