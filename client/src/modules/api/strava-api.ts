@@ -1,5 +1,9 @@
 import polyline from "@mapbox/polyline";
 import {
+	Activity3dPositions,
+	GetActivity3dPositionsResponse,
+} from "shared/index";
+import {
 	GetActivitiesResponse,
 	StravaActivity,
 	StravaActivityRaw,
@@ -78,6 +82,39 @@ export async function fetchStravaActivitiesFromAPI(): Promise<
 	return rawActivities;
 }
 
+export async function fetchStravaActivity3dPositionsFromAPI(
+	activityId: string,
+): Promise<Activity3dPositions> {
+	console.log("Fetching activities from API");
+	let error;
+	const response = await fetch(
+		`/api/activity-3d-positions?activityId=${activityId}`,
+		{
+			credentials: "include",
+		},
+	);
+	if (response.status !== 200) {
+		error = `status ${response.status}`;
+	}
+	const activity3dPositionsResponse =
+		(await response.json()) as GetActivity3dPositionsResponse;
+	if (activity3dPositionsResponse.rateLimitExceeded) {
+		error = "Rate limit exceeded";
+	}
+	if (activity3dPositionsResponse.error) {
+		error = activity3dPositionsResponse.error;
+	}
+	if (!activity3dPositionsResponse.activity3dPositions) {
+		throw Error(
+			error
+				? `Error fetching activities from API: ${error}`
+				: "No activities found",
+		);
+	}
+	const Activity3dPositions = activity3dPositionsResponse.activity3dPositions;
+	return Activity3dPositions;
+}
+
 function decodePolylinePoints(
 	stravaActivitiesResponse: StravaActivityRaw[],
 ): (StravaActivityRaw & { polylinePoints?: [number, number][] })[] {
@@ -128,4 +165,13 @@ export async function fetchStravaActivities(): Promise<StravaActivity[]> {
 	storeActivities(activitiesFiltered);
 
 	return activitiesFiltered;
+}
+
+export async function fetchActivity3dPositions(
+	activityId: string,
+): Promise<Activity3dPositions> {
+	const activity3dPositions =
+		await fetchStravaActivity3dPositionsFromAPI(activityId);
+	// TODO Store in localstorage
+	return activity3dPositions;
 }
