@@ -2,6 +2,8 @@
 
 A map-centric view for your activity data.
 
+[![Demo Video](./assets/demo_video.webm)](./assets/demo_video.webm)
+
 ## Developer Instructions
 
 - Run `npm i` in both the client and server directories
