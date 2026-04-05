@@ -2,7 +2,11 @@
 
 A map-centric view for your activity data.
 
-<video src="./assets/demo_video.webm" width="800" controls></video>
+__Demo video__
+
+https://github.com/user-attachments/assets/bcfde6be-9fa4-42ed-8993-6f97a44fe994
+
+
 
 ## Developer Instructions
 
