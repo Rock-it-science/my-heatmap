@@ -64,9 +64,6 @@ const chartOptions: ChartOptions<"bar"> = {
 		},
 	},
 	plugins: {
-		// tooltip: {
-		// 	enabled: false,
-		// },
 		legend: {
 			display: false,
 		},
@@ -368,8 +365,8 @@ export function MapApp() {
 			<Box ref={mapContainerRef} id="map-container">
 				<MapContainer
 					ref={setMap}
-					center={[50.875, -114.045]} // TODO Make this dynamic based on min/max values of user's activities
-					zoom={13}
+					center={[49.981, -119.333]} // TODO Make this dynamic based on min/max values of user's activities
+					zoom={12}
 					style={{
 						height: "calc(100vh - 60px)",
 						width: "100%",
@@ -506,6 +503,8 @@ export function MapApp() {
 					style={{
 						zIndex: zIndexMap.overlay,
 						position: "absolute",
+						backgroundColor: "rgba(208, 221, 242, 0.5)",
+						borderRadius: "8px",
 					}}
 				/>
 				<Slider.Root
