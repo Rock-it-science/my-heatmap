@@ -2,11 +2,27 @@
 
 A map-centric view for your activity data.
 
-__Demo video__
+**Demo video**
 
 https://github.com/user-attachments/assets/bcfde6be-9fa4-42ed-8993-6f97a44fe994
 
+**Features**
 
+- Activity details, including elevation chart and activity metadata
+
+![](./assets/activity-detail.png)
+
+- Activity GPX lines color-coated by activity type
+
+![](./assets/activity-type.png)
+
+- Heatmap layer with configurable point density
+
+![](./assets/heatmap.png)
+
+- Interactive legend, and date filter
+
+![](./assets/bottom-bars.png)
 
 ## Developer Instructions
 
